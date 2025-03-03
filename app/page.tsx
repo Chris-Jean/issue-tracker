@@ -1,39 +1,45 @@
 "use client";
 
-import { useState } from "react";
-import IssueList from "./IssueList";
-import IssueForm from "./IssueForm";
-import IssueDetail from "./IssueDetail";
-import type { Issue } from "./types";
 import { Toaster } from "@/components/ui/toaster";
+import { api } from "@/convex/_generated/api";
 import { useToast } from "@/hooks/use-toast";
+import {
+  ConvexProvider,
+  ConvexReactClient,
+  useMutation,
+  useQuery,
+} from "convex/react";
+import { useState } from "react";
+import IssueDetail from "./IssueDetail";
+import IssueForm from "./IssueForm";
+import IssueList from "./IssueList";
+import type { Issue } from "./types";
 
-export default function Home() {
+function Home() {
   const { toast } = useToast();
-  const [issues, setIssues] = useState<Issue[]>([]);
+  const issues = useQuery(api.issues.getIssues);
+  const createIssue = useMutation(api.issues.createIssue);
+  const updateIssue = useMutation(api.issues.updateIssue);
+  const deleteIssue = useMutation(api.issues.deleteIssue);
   const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
 
-  // Add a new issue
-  const handleAddIssue = (newIssue: Omit<Issue, "id">) => {
-    const newIssueWithId = { ...newIssue, id: Date.now().toString() };
-    setIssues((prev) => [...prev, newIssueWithId]);
+  const handleAddIssue = async (newIssue: Omit<Issue, "id">) => {
+    const newIssueWithId = { ...newIssue };
+    await createIssue(newIssueWithId);
     toast({ title: "Success", description: "Issue created successfully" });
   };
 
-  // Update an issue (editing happens inside `IssueDetail.tsx`)
-  const handleUpdateIssue = (updatedIssue: Issue) => {
-    setIssues((prev) => prev.map((issue) => (issue.id === updatedIssue.id ? updatedIssue : issue)));
+  const handleUpdateIssue = async (updatedIssue: Issue) => {
+    await updateIssue(updatedIssue);
     setSelectedIssue(updatedIssue);
   };
 
-  // Delete an issue
-  const handleDeleteIssue = (id: string) => {
-    setIssues((prev) => prev.filter((issue) => issue.id !== id));
+  const handleDeleteIssue = async (id: Issue["_id"]) => {
+    await deleteIssue({ id });
     setSelectedIssue(null);
     toast({ title: "Success", description: "Issue deleted successfully" });
   };
 
-  // Close the issue detail view
   const handleCloseDetail = () => {
     setSelectedIssue(null);
   };
@@ -45,13 +51,23 @@ export default function Home() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <h2 className="text-xl font-semibold mb-2">Issues</h2>
-          <IssueList issues={issues} onSelectIssue={setSelectedIssue} onEditIssue={setSelectedIssue} onDeleteIssue={handleDeleteIssue} />
+          {issues && (
+            <IssueList
+              issues={issues as any[]}
+              onSelectIssue={setSelectedIssue}
+              onEditIssue={setSelectedIssue}
+              onDeleteIssue={handleDeleteIssue}
+            />
+          )}
         </div>
 
-        
         <div>
           {selectedIssue ? (
-            <IssueDetail issue={selectedIssue} onClose={handleCloseDetail} onUpdate={handleUpdateIssue} />
+            <IssueDetail
+              issue={selectedIssue}
+              onClose={handleCloseDetail}
+              onUpdate={handleUpdateIssue}
+            />
           ) : (
             <IssueForm onSubmit={handleAddIssue} onCancel={handleCloseDetail} />
           )}
@@ -60,5 +76,17 @@ export default function Home() {
 
       <Toaster />
     </main>
+  );
+}
+
+const convex = new ConvexReactClient(
+  process.env.NEXT_PUBLIC_CONVEX_URL as string
+);
+
+export default function HomeWrapper() {
+  return (
+    <ConvexProvider client={convex}>
+      <Home />
+    </ConvexProvider>
   );
 }

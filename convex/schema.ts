@@ -1,0 +1,19 @@
+import { defineSchema, defineTable } from "convex/server";
+import { v } from "convex/values";
+
+export default defineSchema({
+  issues: defineTable({
+    title: v.string(),
+    agent: v.string(),
+    language: v.string(),
+    description: v.string(),
+    userType: v.string(),
+    VPN: v.string(),
+    internetSource: v.string(),
+    category: v.string(),
+    dateOfIncident: v.string(),
+  })
+    .index("by_agent", ["agent"])
+    .index("by_title", ["title"])
+    .index("by_category", ["category"]),
+});
