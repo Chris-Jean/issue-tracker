@@ -140,8 +140,8 @@ export default function IssueList({
 
           {!collapsedCategories[category] && (
             <ul className="space-y-2 mt-2">
-              {sortedIssues(paginatedIssues).map((issue) => (
-                <li key={issue._id} className="bg-white p-4 rounded shadow">
+              {sortedIssues(issues).map((issue) => (
+                <li key={issue.title} className="bg-white p-4 rounded shadow">
                   <div className="flex justify-between items-center">
                     <h3
                       className="font-semibold cursor-pointer"
