@@ -1,6 +1,14 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
+// Generate upload URL for image
+export const generateUploadUrl = mutation({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.storage.generateUploadUrl();
+  },
+});
+
 // Create
 export const createIssue = mutation({
   args: {
@@ -13,6 +21,7 @@ export const createIssue = mutation({
     internetSource: v.string(),
     category: v.string(),
     dateOfIncident: v.string(),
+    image: v.any(),
   },
   handler: async (ctx, args) => {
     const issueId = await ctx.db.insert("issues", args);
@@ -23,18 +32,32 @@ export const createIssue = mutation({
 // Read
 export const getIssues = query({
   args: {},
-  handler: async (ctx, args) => {
-    return await ctx.db.query("issues").collect();
+  handler: async (ctx) => {
+    const issues = await ctx.db.query("issues").collect();
+
+    // Convert storage IDs to URLs
+    return await Promise.all(
+      issues.map(async (issue) => {
+        if (issue.image) {
+          const imageUrl = await ctx.storage.getUrl(issue.image);
+          return { ...issue, imageUrl };
+        }
+        return issue;
+      })
+    );
   },
 });
-
 export const getIssue = query({
   args: { id: v.id("issues") },
   handler: async (ctx, args) => {
-    return await ctx.db.get(args.id);
+    const issue = await ctx.db.get(args.id);
+    if (issue && issue.image) {
+      const imageUrl = await ctx.storage.getUrl(issue.image);
+      return { ...issue, imageUrl };
+    }
+    return issue;
   },
 });
-
 // Update
 export const updateIssue = mutation({
   args: {
@@ -60,6 +83,13 @@ export const updateIssue = mutation({
 export const deleteIssue = mutation({
   args: { id: v.id("issues") },
   handler: async (ctx, args) => {
+    const issue = await ctx.db.get(args.id);
+
+    // Delete the image from storage if it exists
+    if (issue && issue.image) {
+      await ctx.storage.delete(issue.image);
+    }
+
     await ctx.db.delete(args.id);
   },
 });
@@ -71,18 +101,20 @@ export const getByIdentifier = query({
     value: v.string(),
   },
   handler: async (ctx, args) => {
+    let issues;
+
     if (args.identifier === "agent") {
-      return await ctx.db
+      issues = await ctx.db
         .query("issues")
         .withIndex("by_agent", (q) => q.eq("agent", args.value))
         .collect();
     } else if (args.identifier === "title") {
-      return await ctx.db
+      issues = await ctx.db
         .query("issues")
         .withIndex("by_title", (q) => q.eq("title", args.value))
         .collect();
     } else if (args.identifier === "category") {
-      return await ctx.db
+      issues = await ctx.db
         .query("issues")
         .withIndex("by_category", (q) => q.eq("category", args.value))
         .collect();
@@ -91,5 +123,16 @@ export const getByIdentifier = query({
         "Invalid identifier. Use 'agent', 'title', or 'category'."
       );
     }
+
+    // Convert storage IDs to URLs
+    return await Promise.all(
+      issues.map(async (issue) => {
+        if (issue.image) {
+          const imageUrl = await ctx.storage.getUrl(issue.image);
+          return { ...issue, imageUrl };
+        }
+        return issue;
+      })
+    );
   },
 });

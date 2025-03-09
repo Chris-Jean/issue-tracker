@@ -16,7 +16,7 @@ import { useEffect, useState } from "react";
 import type { ConvexIssue, Issue } from "./types";
 
 interface IssueFormProps {
-  onSubmit: (issue: Issue) => void;
+  onSubmit: (issue: Issue, previewUrl: File | null) => void;
   initialIssue?: Issue;
   onCancel: () => void;
 }
@@ -43,6 +43,10 @@ export default function IssueForm({
   onCancel,
 }: IssueFormProps) {
   const [issue, setIssue] = useState<Issue>(emptyIssue);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+
+  // Convex mutations
 
   useEffect(() => {
     if (initialIssue) {
@@ -54,7 +58,7 @@ export default function IssueForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(issue as Issue);
+    onSubmit(issue as Issue, selectedImage);
     setIssue(emptyIssue);
   };
 
@@ -71,9 +75,37 @@ export default function IssueForm({
     setIssue(emptyIssue);
     onCancel();
   };
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedImage(file);
+      // Create a preview URL
+      const objectUrl = URL.createObjectURL(file);
+      setPreviewUrl(objectUrl);
+    }
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="mb-4 col-span-2">
+        <label className="block text-gray-700 mb-2">Image</label>
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleImageChange}
+          className="w-full"
+        />
+        {previewUrl && (
+          <div className="mt-2">
+            <img
+              src={previewUrl}
+              alt="Preview"
+              className="h-40 object-contain"
+            />
+          </div>
+        )}
+      </div>
+
       <Input
         type="text"
         name="title"

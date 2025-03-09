@@ -12,6 +12,8 @@ export default defineSchema({
     internetSource: v.string(),
     category: v.string(),
     dateOfIncident: v.string(),
+    imageUrl: v.optional(v.string()),
+    image: v.optional(v.id("_storage")),
   })
     .index("by_agent", ["agent"])
     .index("by_title", ["title"])

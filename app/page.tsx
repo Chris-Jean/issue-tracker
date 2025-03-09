@@ -17,16 +17,38 @@ import type { ConvexIssue, MetaIssue } from "./types";
 
 function Home() {
   const { toast } = useToast();
-  const issues = useQuery(api.issues.getIssues);
+  const issues = useQuery(api.issues.getIssues) as ConvexIssue[];
   const createIssue = useMutation(api.issues.createIssue);
   const updateIssue = useMutation(api.issues.updateIssue);
   const deleteIssue = useMutation(api.issues.deleteIssue);
+  const generateUploadUrl = useMutation(api.issues.generateUploadUrl);
+
   const [selectedIssue, setSelectedIssue] = useState<MetaIssue | null>(null);
 
   const handleAddIssue = async (
-    newIssue: Omit<ConvexIssue, "_id" | "_creationTime">
+    newIssue: Omit<ConvexIssue, "_id" | "_creationTime">,
+    selectedImage: File | null
   ) => {
-    const newIssueWithId = { ...newIssue };
+    let imageId = null;
+
+    // Upload image if one is selected
+    if (selectedImage) {
+      // Step 1: Get a short-lived upload URL
+      const postUrl = await generateUploadUrl();
+
+      // Step 2: POST the file to the URL
+      const result = await fetch(postUrl, {
+        method: "POST",
+        headers: { "Content-Type": selectedImage.type },
+        body: selectedImage,
+      });
+
+      // Get the storage ID from the response
+      const { storageId } = await result.json();
+      imageId = storageId;
+    }
+
+    const newIssueWithId = { ...newIssue, image: imageId };
     await createIssue(newIssueWithId);
     toast({ title: "Success", description: "Issue created successfully" });
   };

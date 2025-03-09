@@ -7,7 +7,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ChevronDown, ChevronRight, Pencil, Trash2 } from "lucide-react";
+import { exportToJsonExcel } from "@/helpers/fileHelpers";
+import {
+  ChevronDown,
+  ChevronRight,
+  Download,
+  Pencil,
+  Trash2,
+} from "lucide-react";
+import Image from "next/image";
 import { useState } from "react";
 import type { ConvexIssue, MetaIssue } from "./types";
 
@@ -77,6 +85,12 @@ export default function IssueList({
     }));
   };
 
+  function handleDownloadExcel(category: string, issues: ConvexIssue[]) {
+    exportToJsonExcel(
+      issues,
+      category + "-issues-" + new Date(Date.now()).toDateString()
+    );
+  }
   return (
     <div>
       {/* 🔢 Total Issues */}
@@ -132,6 +146,10 @@ export default function IssueList({
             ) : (
               <ChevronDown className="h-5 w-5" />
             )}
+            <Download
+              onClick={() => handleDownloadExcel(category, issues)}
+              className="h-5 w-5"
+            />
           </div>
 
           {!collapsedCategories[category] && (
@@ -145,6 +163,14 @@ export default function IssueList({
                     >
                       {issue.title}
                     </h3>
+                    {issue.imageUrl && (
+                      <Image
+                        src={issue.imageUrl}
+                        width={100}
+                        height={100}
+                        alt={issue.title}
+                      />
+                    )}
                     <div className="flex space-x-2">
                       <Button
                         variant="ghost"
