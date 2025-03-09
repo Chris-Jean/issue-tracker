@@ -13,7 +13,7 @@ import { useState } from "react";
 import IssueDetail from "./IssueDetail";
 import IssueForm from "./IssueForm";
 import IssueList from "./IssueList";
-import type { Issue } from "./types";
+import type { ConvexIssue, MetaIssue } from "./types";
 
 function Home() {
   const { toast } = useToast();
@@ -21,20 +21,22 @@ function Home() {
   const createIssue = useMutation(api.issues.createIssue);
   const updateIssue = useMutation(api.issues.updateIssue);
   const deleteIssue = useMutation(api.issues.deleteIssue);
-  const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
+  const [selectedIssue, setSelectedIssue] = useState<MetaIssue | null>(null);
 
-  const handleAddIssue = async (newIssue: Omit<Issue, "id">) => {
+  const handleAddIssue = async (
+    newIssue: Omit<ConvexIssue, "_id" | "_creationTime">
+  ) => {
     const newIssueWithId = { ...newIssue };
     await createIssue(newIssueWithId);
     toast({ title: "Success", description: "Issue created successfully" });
   };
 
-  const handleUpdateIssue = async (updatedIssue: Issue) => {
+  const handleUpdateIssue = async (updatedIssue: MetaIssue) => {
     await updateIssue(updatedIssue);
     setSelectedIssue(updatedIssue);
   };
 
-  const handleDeleteIssue = async (id: Issue["_id"]) => {
+  const handleDeleteIssue = async (id: MetaIssue["_id"]) => {
     await deleteIssue({ id });
     setSelectedIssue(null);
     toast({ title: "Success", description: "Issue deleted successfully" });
@@ -53,7 +55,7 @@ function Home() {
           <h2 className="text-xl font-semibold mb-2">Issues</h2>
           {issues && (
             <IssueList
-              issues={issues as any[]}
+              issues={issues}
               onSelectIssue={setSelectedIssue}
               onEditIssue={setSelectedIssue}
               onDeleteIssue={handleDeleteIssue}

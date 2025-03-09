@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useEffect, useState } from "react";
-import type { Issue } from "./types";
+import type { ConvexIssue, Issue } from "./types";
 
 interface IssueFormProps {
   onSubmit: (issue: Issue) => void;
@@ -25,7 +25,7 @@ const getFormattedLocalDate = () => {
   return now.toLocaleDateString("en-CS");
 };
 
-const emptyIssue: Omit<Issue, "id"> = {
+const emptyIssue: ConvexIssue = {
   title: "",
   agent: "",
   language: "",
@@ -35,8 +35,6 @@ const emptyIssue: Omit<Issue, "id"> = {
   internetSource: "",
   category: "",
   dateOfIncident: getFormattedLocalDate(),
-  _creationTime: undefined,
-  _id: undefined,
 };
 
 export default function IssueForm({
@@ -44,7 +42,7 @@ export default function IssueForm({
   initialIssue,
   onCancel,
 }: IssueFormProps) {
-  const [issue, setIssue] = useState<Omit<Issue, "id">>(emptyIssue);
+  const [issue, setIssue] = useState<Issue>(emptyIssue);
 
   useEffect(() => {
     if (initialIssue) {

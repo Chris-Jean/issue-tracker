@@ -9,13 +9,13 @@ import {
 } from "@/components/ui/select";
 import { ChevronDown, ChevronRight, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
-import type { Issue } from "./types";
+import type { ConvexIssue, MetaIssue } from "./types";
 
 interface IssueListProps {
-  issues: Issue[];
-  onSelectIssue: (issue: Issue) => void;
-  onEditIssue: (issue: Issue) => void;
-  onDeleteIssue: (id: Issue["_id"]) => void;
+  issues: ConvexIssue[];
+  onSelectIssue: (issue: MetaIssue) => void;
+  onEditIssue: (issue: MetaIssue) => void;
+  onDeleteIssue: (id: MetaIssue["_id"]) => void;
 }
 
 export default function IssueList({
@@ -52,11 +52,11 @@ export default function IssueList({
       acc[category].push(issue);
       return acc;
     },
-    {} as Record<string, Issue[]>
+    {} as Record<string, ConvexIssue[]>
   );
 
   // 🔼 Sort Issues
-  const sortedIssues = (issues: Issue[]) => {
+  const sortedIssues = (issues: ConvexIssue[]) => {
     return [...issues].sort((a, b) => {
       if (sortBy === "agent") return a.agent.localeCompare(b.agent);
       return (
@@ -69,10 +69,6 @@ export default function IssueList({
   // 🔢 Paginate Issues
   const allIssues = Object.values(groupedIssues).flat(); // Convert grouped issues to a flat list
   const totalPages = Math.ceil(allIssues.length / ITEMS_PER_PAGE);
-  const paginatedIssues = allIssues.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
 
   const toggleCategory = (category: string) => {
     setCollapsedCategories((prev) => ({
@@ -145,7 +141,7 @@ export default function IssueList({
                   <div className="flex justify-between items-center">
                     <h3
                       className="font-semibold cursor-pointer"
-                      onClick={() => onSelectIssue(issue)}
+                      onClick={() => onSelectIssue(issue as MetaIssue)}
                     >
                       {issue.title}
                     </h3>
@@ -153,14 +149,16 @@ export default function IssueList({
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => onEditIssue(issue)}
+                        onClick={() => onEditIssue(issue as MetaIssue)}
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => onDeleteIssue(issue._id)}
+                        onClick={() =>
+                          onDeleteIssue(issue._id as MetaIssue["_id"])
+                        }
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
