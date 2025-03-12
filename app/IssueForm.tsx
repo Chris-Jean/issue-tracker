@@ -60,6 +60,13 @@ export default function IssueForm({
     e.preventDefault();
     onSubmit(issue as Issue, selectedImage);
     setIssue(emptyIssue);
+    setSelectedImage(null);  // ✅ Clears image preview
+    setPreviewUrl(null);     // ✅ Clears image preview
+
+    const fileInput = document.getElementById("imageUpload") as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = "";
+    }
   };
 
   const handleChange = (
@@ -91,6 +98,7 @@ export default function IssueForm({
         <label className="block text-gray-700 mb-2">Image</label>
         <input
           type="file"
+          id="imageUpload"
           accept="image/*"
           onChange={handleImageChange}
           className="w-full"

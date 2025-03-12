@@ -39,6 +39,7 @@ export default function IssueList({
   const [filterByCategory, setFilterByCategory] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [enlargedImage, setEnlargedImage] = useState<string | null>(null); // ✅ Added for image enlargement
 
   const ITEMS_PER_PAGE = 10;
 
@@ -91,6 +92,7 @@ export default function IssueList({
       category + "-issues-" + new Date(Date.now()).toDateString()
     );
   }
+
   return (
     <div>
       {/* 🔢 Total Issues */}
@@ -163,12 +165,15 @@ export default function IssueList({
                     >
                       {issue.title}
                     </h3>
+                    {/* ✅ Clickable Uploaded Image */}
                     {issue.imageUrl && (
                       <Image
                         src={issue.imageUrl}
                         width={100}
                         height={100}
                         alt={issue.title}
+                        className="cursor-pointer"
+                        onClick={() => setEnlargedImage(issue.imageUrl ?? null)}
                       />
                     )}
                     <div className="flex space-x-2">
@@ -190,23 +195,12 @@ export default function IssueList({
                       </Button>
                     </div>
                   </div>
+
                   <p className="text-sm text-gray-600">Agent: {issue.agent}</p>
                   <p className="text-sm text-gray-600">
                     Language: {issue.language}
                   </p>
-                  <p className="text-sm text-gray-600">
-                    User Type: {issue.userType}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    VPN: {issue.VPN || "N/A"}
-                  </p>
                   <p className="text-sm text-gray-600">{issue.description}</p>
-                  <p className="text-sm text-gray-600">
-                    Date of Incident:{" "}
-                    {issue.dateOfIncident
-                      ? new Date(issue.dateOfIncident).toLocaleDateString()
-                      : "N/A"}
-                  </p>
                 </li>
               ))}
             </ul>
@@ -214,23 +208,13 @@ export default function IssueList({
         </div>
       ))}
 
-      {totalPages > 1 && (
-        <div className="flex justify-between mt-4">
-          <Button
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage(currentPage - 1)}
-          >
-            Previous
-          </Button>
-          <p>
-            Page {currentPage} of {totalPages}
-          </p>
-          <Button
-            disabled={currentPage === totalPages}
-            onClick={() => setCurrentPage(currentPage + 1)}
-          >
-            Next
-          </Button>
+      {/* ✅ Enlarged Image Popup */}
+      {enlargedImage && (
+        <div 
+          className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
+          onClick={() => setEnlargedImage(null)}
+        >
+          <img src={enlargedImage} className="max-w-full max-h-full" alt="Enlarged Attachment" />
         </div>
       )}
     </div>
