@@ -15,7 +15,7 @@ import {
   Pencil,
   Trash2,
 } from "lucide-react";
-import Image from "next/image";
+import Image from "next/image"; // ✅ Import next/image
 import { useState } from "react";
 import type { ConvexIssue, MetaIssue } from "./types";
 
@@ -38,10 +38,12 @@ export default function IssueList({
   const [sortBy, setSortBy] = useState<string>("date");
   const [filterByCategory, setFilterByCategory] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [currentPage, setCurrentPage] = useState(1);
   const [enlargedImage, setEnlargedImage] = useState<string | null>(null); // ✅ Added for image enlargement
 
-  const ITEMS_PER_PAGE = 10;
+  //  const [currentPage, setCurrentPage] = useState(1);
+
+
+  // const ITEMS_PER_PAGE = 10;
 
   // 🔍 Apply Search & Filtering
   const filteredIssues = issues.filter(
@@ -76,8 +78,9 @@ export default function IssueList({
   };
 
   // 🔢 Paginate Issues
-  const allIssues = Object.values(groupedIssues).flat(); // Convert grouped issues to a flat list
-  const totalPages = Math.ceil(allIssues.length / ITEMS_PER_PAGE);
+  // const allIssues = Object.values(groupedIssues).flat(); // Convert grouped issues to a flat list
+  
+  // const totalPages = Math.ceil(allIssues.length / ITEMS_PER_PAGE);
 
   const toggleCategory = (category: string) => {
     setCollapsedCategories((prev) => ({
@@ -165,7 +168,7 @@ export default function IssueList({
                     >
                       {issue.title}
                     </h3>
-                    {/* ✅ Clickable Uploaded Image */}
+                    {/* ✅ Clickable Uploaded Image with next/image */}
                     {issue.imageUrl && (
                       <Image
                         src={issue.imageUrl}
@@ -195,7 +198,6 @@ export default function IssueList({
                       </Button>
                     </div>
                   </div>
-
                   <p className="text-sm text-gray-600">Agent: {issue.agent}</p>
                   <p className="text-sm text-gray-600">
                     Language: {issue.language}
@@ -208,13 +210,19 @@ export default function IssueList({
         </div>
       ))}
 
-      {/* ✅ Enlarged Image Popup */}
+      {/* ✅ Enlarged Image Popup using next/image */}
       {enlargedImage && (
         <div 
           className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
           onClick={() => setEnlargedImage(null)}
         >
-          <img src={enlargedImage} className="max-w-full max-h-full" alt="Enlarged Attachment" />
+          <Image
+            src={enlargedImage}
+            width={600}
+            height={600}
+            alt="Enlarged Attachment"
+            className="object-contain"
+          />
         </div>
       )}
     </div>

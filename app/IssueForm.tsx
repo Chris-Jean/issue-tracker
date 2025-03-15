@@ -14,6 +14,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useEffect, useState } from "react";
 import type { ConvexIssue, Issue } from "./types";
+import Image from "next/image"; // ✅ Import next/image
 
 interface IssueFormProps {
   onSubmit: (issue: Issue, previewUrl: File | null) => void;
@@ -31,7 +32,7 @@ const emptyIssue: ConvexIssue = {
   language: "",
   description: "",
   userType: "",
-  VPN: "",
+  VPN: "VPN",
   internetSource: "",
   category: "",
   dateOfIncident: getFormattedLocalDate(),
@@ -105,10 +106,12 @@ export default function IssueForm({
         />
         {previewUrl && (
           <div className="mt-2">
-            <img
+            <Image
               src={previewUrl}
               alt="Preview"
-              className="h-40 object-contain"
+              width={160}
+              height={160}
+              className="object-contain"
             />
           </div>
         )}
