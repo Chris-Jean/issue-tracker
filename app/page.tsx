@@ -14,6 +14,7 @@ import IssueDetail from "./IssueDetail";
 import IssueForm from "./IssueForm";
 import IssueList from "./IssueList";
 import type { ConvexIssue, MetaIssue } from "./types";
+import { Id } from "@/convex/_generated/dataModel"; // ✅ Import Convex ID type
 
 function Home() {
   const { toast } = useToast();
@@ -29,39 +30,61 @@ function Home() {
     newIssue: Omit<ConvexIssue, "_id" | "_creationTime">,
     selectedImage: File | null
   ) => {
-    let imageId = null;
+    try {
+      let imageId: Id<"_storage"> | undefined;
 
-    // Upload image if one is selected
-    if (selectedImage) {
-      // Step 1: Get a short-lived upload URL
-      const postUrl = await generateUploadUrl();
+      // Upload image if one is selected
+      if (selectedImage) {
+        // Step 1: Get a short-lived upload URL
+        const postUrl = await generateUploadUrl();
 
-      // Step 2: POST the file to the URL
-      const result = await fetch(postUrl, {
-        method: "POST",
-        headers: { "Content-Type": selectedImage.type },
-        body: selectedImage,
-      });
+        // Step 2: POST the file to the URL
+        const result = await fetch(postUrl, {
+          method: "POST",
+          headers: { "Content-Type": selectedImage.type },
+          body: selectedImage,
+        });
 
-      // Get the storage ID from the response
-      const { storageId } = await result.json();
-      imageId = storageId;
+        if (!result.ok) {
+          throw new Error("Image upload failed. Please try again.");
+        }
+
+        // Get the storage ID from the response
+        const { storageId } = await result.json();
+        imageId = storageId as Id<"_storage">; // ✅ Correct Type
+      }
+
+      const newIssueWithId = imageId
+        ? { ...newIssue, image: imageId }
+        : { ...newIssue };
+
+      await createIssue(newIssueWithId);
+      toast({ title: "Success", description: "Issue created successfully" });
+    } catch (error) {
+      console.error("Error adding issue:", error);
+      toast({ title: "Error", description: "Failed to create issue. Try again." });
     }
-
-    const newIssueWithId = { ...newIssue, image: imageId };
-    await createIssue(newIssueWithId);
-    toast({ title: "Success", description: "Issue created successfully" });
   };
 
   const handleUpdateIssue = async (updatedIssue: MetaIssue) => {
-    await updateIssue(updatedIssue);
-    setSelectedIssue(updatedIssue);
+    try {
+      await updateIssue(updatedIssue);
+      setSelectedIssue(updatedIssue);
+    } catch (error) {
+      console.error("Error updating issue:", error);
+      toast({ title: "Error", description: "Failed to update issue." });
+    }
   };
 
   const handleDeleteIssue = async (id: MetaIssue["_id"]) => {
-    await deleteIssue({ id });
-    setSelectedIssue(null);
-    toast({ title: "Success", description: "Issue deleted successfully" });
+    try {
+      await deleteIssue({ id });
+      setSelectedIssue(null);
+      toast({ title: "Success", description: "Issue deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting issue:", error);
+      toast({ title: "Error", description: "Failed to delete issue." });
+    }
   };
 
   const handleCloseDetail = () => {

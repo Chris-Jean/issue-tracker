@@ -58,7 +58,7 @@ export default function IssueForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(issue as Issue, selectedImage);
+    onSubmit(issue as Issue, selectedImage ? selectedImage : null);
     setIssue(emptyIssue);
     setSelectedImage(null);  // ✅ Clears image preview
     setPreviewUrl(null);     // ✅ Clears image preview

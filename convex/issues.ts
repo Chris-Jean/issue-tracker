@@ -21,12 +21,20 @@ export const createIssue = mutation({
     internetSource: v.string(),
     category: v.string(),
     dateOfIncident: v.string(),
-    image: v.any(),
+    image: v.optional(v.id("_storage")),
   },
   handler: async (ctx, args) => {
-    const issueId = await ctx.db.insert("issues", args);
+    try {
+    const {image, ...issueData } = args;
+    const issue = image ? {...issueData, image } : issueData;
+
+    const issueId = await ctx.db.insert("issues", issue);
     return issueId;
-  },
+  } catch (error) {
+    console.error ("Error creating issue:", error);
+    throw new Error("Failed to create issue. Please try again.");
+  }
+},
 });
 
 // Read
