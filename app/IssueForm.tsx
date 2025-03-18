@@ -12,9 +12,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import Image from "next/image"; // ✅ Import next/image
 import { useEffect, useState } from "react";
 import type { ConvexIssue, Issue } from "./types";
-import Image from "next/image"; // ✅ Import next/image
 
 interface IssueFormProps {
   onSubmit: (issue: Issue, previewUrl: File | null) => void;
@@ -59,12 +59,15 @@ export default function IssueForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log({ selectedImage });
     onSubmit(issue as Issue, selectedImage ? selectedImage : null);
     setIssue(emptyIssue);
-    setSelectedImage(null);  // ✅ Clears image preview
-    setPreviewUrl(null);     // ✅ Clears image preview
+    setSelectedImage(null); // ✅ Clears image preview
+    setPreviewUrl(null); // ✅ Clears image preview
 
-    const fileInput = document.getElementById("imageUpload") as HTMLInputElement;
+    const fileInput = document.getElementById(
+      "imageUpload"
+    ) as HTMLInputElement;
     if (fileInput) {
       fileInput.value = "";
     }
