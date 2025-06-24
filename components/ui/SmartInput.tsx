@@ -4,10 +4,11 @@ import { useState } from "react";
 type SmartInputProps = {
   label: string;
   name: string;
-  value: string | undefined;
+  value: string;
   options: string[];
   placeholder?: string;
   onChange: (value: string) => void;
+  className?: string; // ✅ Add this line
 };
 
 export default function SmartInput({
