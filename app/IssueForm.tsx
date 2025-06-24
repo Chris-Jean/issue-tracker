@@ -104,14 +104,6 @@ export default function IssueForm({
     setIssue((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleAddLanguage = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setIssue((prev) => ({ ...prev, language: value }));
-    if (value && !languages.includes(value)) {
-      setLanguages((prev) => [...prev, value]);
-    }
-  };
-
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -249,7 +241,7 @@ export default function IssueForm({
                 }}
                 className="p-2 hover:bg-accent/10 text-sm text-accent cursor-pointer"
               >
-                ➕ Add "{query}"
+                &#43; Add &quot;{query}&quot;
               </li>
             )}
           </ul>
@@ -302,9 +294,11 @@ export default function IssueForm({
           className="fixed inset-0 z-50 bg-black bg-opacity-70 flex items-center justify-center"
           onClick={() => setEnlargedPreview(null)}
         >
-          <img
+          <Image
             src={enlargedPreview}
             alt="Enlarged preview"
+            width={800}
+            height={800}
             className="max-w-full max-h-full rounded-lg shadow-lg"
           />
         </div>
