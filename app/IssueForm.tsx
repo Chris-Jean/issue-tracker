@@ -17,6 +17,7 @@ import {
   initialLanguages
 } from "./data/issueOptions";
 
+
 interface IssueFormProps {
   onSubmit: (issue: Issue, previewUrl: File | null) => void;
   initialIssue?: Issue;
@@ -89,12 +90,18 @@ export default function IssueForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(issue, selectedImage);
+    console.log({ selectedImage });
+    onSubmit(issue as Issue, selectedImage ? selectedImage : null);
     setIssue(emptyIssue);
-    setSelectedImage(null);
-    setPreviewUrl(null);
-    const fileInput = document.getElementById("imageUpload") as HTMLInputElement;
-    if (fileInput) fileInput.value = "";
+    setSelectedImage(null); // ✅ Clears image preview
+    setPreviewUrl(null); // ✅ Clears image preview
+
+    const fileInput = document.getElementById(
+      "imageUpload"
+    ) as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = "";
+    }
   };
 
   const handleChange = (
@@ -262,7 +269,6 @@ export default function IssueForm({
         onChange={(val) => setIssue((prev) => ({ ...prev, reason: val }))}
         options={reason}
         placeholder="Enter or search Reason"
-        className="w-full p-2 bg-input text-foreground border border-input rounded"
       />
 
       {/* 📝 Description */}
