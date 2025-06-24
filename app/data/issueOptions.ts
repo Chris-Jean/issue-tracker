@@ -1,0 +1,77 @@
+// /app/data/issueOptions.ts
+
+export const serviceNumbers = [
+    "12075601050", "12077075147", "12085726420", "12085726840", "12176454020",
+    "12252809390", "12402525600", "13042050870", "13043090045", "13123800108",
+    "13174447240", "14053692050", "14054021091", "14062351010", "14064054235",
+    "14342053600", "14433332249", "14434589967", "15043135530", "15152073930",
+    "15152079679", "15172241600", "15173431371", "16083514250", "16085097344",
+    "16093850320", "16095254950", "16155440500", "16159051381", "16163786712",
+    "16163799610", "16166261660", "16169511960", "16463965360", "16463965421",
+    "16463965512", "16466998121", "16467418485", "16467629835", "16467870560",
+    "16468130560", "16468173170", "16468635275", "16468680155", "16469149710",
+    "17172550160", "17176148680", "17372438780", "17372458444", "17712403790",
+    "17718880190", "17852613900", "17852929199", "18022226390", "18022420340",
+    "18044418283", "18133491054", "18135697739", "18135697791", "18138500194",
+    "18572403225", "18573016416", "18886904105", "18886904106", "18886904109",
+    "18886904110", "19044310371", "19044310459", "19044310470", "19046048008",
+    "19046722006", "19049846487", "19162460460", "19168271454", "19193415330",
+    "19198675769", "3043090045"
+  ];
+  
+  export const projectNames = [
+    "ME: A - DMCV - Automated TI", "ME: B - DMCB - Automated TI", "ID: A - DMCV - Automated TI",
+    "ID: B - DMCV - Automated TI", "IL: B - DMCV - Automated TI", "LA: A - DMCV - Automated TI",
+    "MD: A - DMCV - Automated TI", "WV: B - DMCV - Automated TI", "WV: A - DMCB - Automated TI",
+    "IL: A - DMCB - Automated TI", "IN: A - DMCV - Automated TI", "OK: B - DMCV - Automated TI",
+    "OK: A - DMCB - Automated TI", "MT: B - DMCV - Automated TI", "MT: A - DMCB - Automated TI",
+    "VA: A - DMCV - Automated TI", "MD: B - DMCB - Automated TI", "IN: B - DMCB - Automated TI",
+    "LA: B - DMCB - Automated TI", "IA: B - DMCB - Automated TI", "MI: B - DMCV - Automated TI",
+    "MI: A - DMCB - Automated TI", "WI: A - DMCV - Automated TI", "WI: B - DMCB - Automated TI",
+    "NJ: A - DMCV - Automated TI", "NJ: B - DMCB - Automated TI", "TN: B - DMCV - Automated TI",
+    "TN: A - DMCB - Automated TI", "NY: B - DMCB - Automated TI - Voice - NY CAS",
+    "NY: A - DMCB - Automated TI - Voice - NYIAP IA NA", "NY: B - DMCB - Automated TI - Voice - NYIAP IPP Clinical",
+    "NY: A - DMCB - Automated TI - Voice - OPWDD-CANS", "NY: A - DMCB - Automated TI - Voice - CYES FSC",
+    "NY: B - DMCB - Automated TI - Voice - CYES Assessors", "NY: B - DMCB - Automated TI - Voice - CYES QA",
+    "NY: B - DMCV - Automated TI - Voice - CYES FSC", "NY NY", "NY: A - DMCV - Automated TI - Voice - CYES QA",
+    "NY: A - DMCV - Automated TI - Voice - NY CAS", "NY: B - DMCV - Automated TI - Voice - NYIAP IA NA",
+    "NY: A - DMCV - Automated TI - Voice - CYES Assessors", "NY: A - DMCV - Automated TI - Voice - NYIAP IPP Clinical",
+    "NY: B - DMCV - Automated TI - Voice - OPWDD-CANS", "NY: B - DMCV - Automated TI", "PA: B - DMCV - Automated TI"
+  ];
+  
+
+  export const clients = [
+    "Austin Consolidation", "BVI", "CA DDTP", "CA Foster Youth", "CA HCO", "CA Healthy Families MCAP",
+    "CA LifeLine", "CA OTLICP", "CAS Assessors", "CCHIP", "CO PASRR", "Colorado EB", "Cover VA Appeals",
+    "Cover VA CPU", "Cover VA CVCC", "Cover VA CVIU CC", "CT PASRR", "CYES Assessors", "CYES FSC",
+    "CYES QA", "DC EB", "DE PASRR", "Florida Healthy Kids", "GAIES", "HACCP", "IA PASRR", "Idaho E&T",
+    "IL MOD", "IL PASRR", "Illinois EB", "IN EB", "IN LCAR", "IN MSS", "IN QRTP", "Kansas Full Service",
+    "KS HCBS", "LA EB", "LA PASRR", "MA BSS", "MA DPH", "MD DBAP", "ME SBM", "Michigan Atypical Provider",
+    "Michigan MI EBS", "Michigan MIBridges", "Michigan Provider Support", "Michigan QTRP", "MS PASRR",
+    "MT E&T", "NC EB", "NC EB RTM", "ND PASRR / CTS", "New Hampshire CAT", "New Jersey SBE", "NJ Paternity",
+    "NY CAS Assessors", "NY CAS OPS", "NY FIDA-IDD", "NY HARP", "NY Mainstream and SNP", "NY MLTC",
+    "NY PASRR", "NY Provider", "NY WeCARE", "NYIAP CC", "NYIAP IA NA", "NYIAP IA OSU", "NYIAP IPP Clinical",
+    "NYIAP IPP OSU", "Ohio PASRR", "Oklahoma SoonerCare", "OPWDD-CANS-Assessors", "OPWDD-CANS-Call Center",
+    "OR MED", "Orange County CalWorks", "PA EAP", "PA IEB", "San Mateo SSI", "SC EB", "SD PASRR", "TN AA",
+    "TN KB", "TN PASRR", "TN SIS", "TX EB", "TX ESS", "VA PASRR", "VT VHC", "Wayne County Call Center",
+    "WI FSET", "WI Works (W-2)", "Wisconsin EB", "WV EB"
+  ];
+  
+  export const reason = [
+    "Maximus agent hung up",
+    "Direct Patient Transfer",
+    "Patient Left on Call",
+    "Call came in on hold"
+  ];
+  
+  export const categories = [
+    "Client issues", "Rude Clients"
+  ];
+  
+  export const initialLanguages = [
+    "Arabic", "Bengali", "Burmese", "Cantonese", "Creole (Haitian)", "Dari", "Farsi", "French", "Fuzhou",
+    "Gujarati", "Hakka", "Hindi", "Italian", "Japanese", "Korean", "Kurdish", "Mai Mai", "Malay",
+    "Malayalam", "Mandarin", "Nepali", "Pashto", "Polish", "Portuguese", "Punjabi", "Rohingya", "Russian",
+    "Somali", "Spanish", "Twi", "Urdu", "Vietnamese", "Wolof"
+  ];
+  

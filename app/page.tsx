@@ -15,6 +15,8 @@ import IssueForm from "./IssueForm";
 import IssueList from "./IssueList";
 import type { ConvexIssue, MetaIssue } from "./types";
 import { Id } from "@/convex/_generated/dataModel"; // ✅ Import Convex ID type
+import ThemeToggle from "@/components/ui/ThemeToggle";
+
 
 function Home() {
   const { toast } = useToast();
@@ -93,7 +95,10 @@ function Home() {
 
   return (
     <main className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Issue Tracker</h1>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold mb-4">Issue Tracker</h1>
+        <ThemeToggle />
+        </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>

@@ -1,7 +1,9 @@
-import { Button } from "@/components/ui/button";
+"use client";
+
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { MetaIssue } from "./types";
 
 interface IssueDetailProps {
@@ -10,13 +12,12 @@ interface IssueDetailProps {
   onUpdate: (updatedIssue: MetaIssue) => void;
 }
 
-export default function IssueDetail({
-  issue,
-  onClose,
-  onUpdate,
-}: IssueDetailProps) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editedIssue, setEditedIssue] = useState(issue);
+export default function IssueDetail({ issue, onClose, onUpdate }: IssueDetailProps) {
+  const [editedIssue, setEditedIssue] = useState<MetaIssue>(issue);
+
+  useEffect(() => {
+    setEditedIssue(issue);
+  }, [issue]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -26,95 +27,74 @@ export default function IssueDetail({
   };
 
   const handleSave = () => {
-    if (window.confirm("Are you sure you want to save these changes?")) {
+    if (window.confirm("Are you sure you want to save changes to this issue?")) {
       onUpdate(editedIssue);
-      setIsEditing(false);
+      onClose();
     }
   };
 
   return (
-    <div
-      className={`bg-white p-4 rounded shadow ${isEditing ? "border-2 border-blue-500" : ""}`}
-    >
-      <h3 className="text-xl font-semibold mb-2">
-        {isEditing ? (
-          <Input
-            type="text"
-            name="title"
-            value={editedIssue.title}
-            onChange={handleChange}
-          />
-        ) : (
-          editedIssue.title
-        )}
-      </h3>
-
-      {isEditing ? (
-        <div className="space-y-2">
-          <Textarea
-            name="description"
-            value={editedIssue.description}
-            onChange={handleChange}
-          />
-          <Input
-            type="text"
-            name="agent"
-            value={editedIssue.agent}
-            onChange={handleChange}
-            placeholder="Agent"
-          />
-          <Input
-            type="text"
-            name="language"
-            value={editedIssue.language}
-            onChange={handleChange}
-            placeholder="Language"
-          />
-          <Input
-            type="text"
-            name="VPN"
-            value={editedIssue.VPN}
-            onChange={handleChange}
-            placeholder="VPN"
-          />
-          <Input
-            type="text"
-            name="internetSource"
-            value={editedIssue.internetSource}
-            onChange={handleChange}
-            placeholder="Internet Source"
-          />
-        </div>
-      ) : (
-        <div>
-          <p className="mb-2">{editedIssue.description}</p>
-          <p className="text-sm text-gray-600">Agent: {editedIssue.agent}</p>
-          <p className="text-sm text-gray-600">
-            Language: {editedIssue.language}
-          </p>
-          <p className="text-sm text-gray-600">VPN: {editedIssue.VPN}</p>
-          <p className="text-sm text-gray-600">
-            Internet Source: {editedIssue.internetSource}
-          </p>
-        </div>
-      )}
-
-      <div className="mt-4 flex justify-end space-x-2">
-        {isEditing ? (
-          <>
-            <Button variant="outline" onClick={() => setIsEditing(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSave}>Save</Button>
-          </>
-        ) : (
-          <>
-            <Button variant="outline" onClick={onClose}>
-              Close
-            </Button>
-            <Button onClick={() => setIsEditing(true)}>Edit</Button>
-          </>
-        )}
+    <div className="space-y-4">
+      <h2 className="text-xl font-semibold">Edit Issue</h2>
+      <Input
+        type="text"
+        name="title"
+        value={editedIssue.title}
+        onChange={handleChange}
+        placeholder="Caller ID"
+      />
+      <Input
+        type="text"
+        name="agent"
+        value={editedIssue.agent}
+        onChange={handleChange}
+        placeholder="Service #"
+      />
+      <Input
+        type="text"
+        name="userType"
+        value={editedIssue.userType}
+        onChange={handleChange}
+        placeholder="Client"
+      />
+      <Input
+        type="text"
+        name="internetSource"
+        value={editedIssue.internetSource}
+        onChange={handleChange}
+        placeholder="Project Name"
+      />
+      <Input
+        type="text"
+        name="language"
+        value={editedIssue.language}
+        onChange={handleChange}
+        placeholder="Language"
+      />
+      <Input
+        type="text"
+        name="reason"
+        value={editedIssue.reason}
+        onChange={handleChange}
+        placeholder="reason"
+      />
+      <Textarea
+        name="description"
+        value={editedIssue.description}
+        onChange={handleChange}
+        placeholder="Description"
+      />
+      <Input
+        type="datetime-local"
+        name="dateOfIncident"
+        value={editedIssue.dateOfIncident.split(".")[0]}
+        onChange={handleChange}
+      />
+      <div className="flex justify-end space-x-2">
+        <Button variant="outline" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button onClick={handleSave}>Save</Button>
       </div>
     </div>
   );
