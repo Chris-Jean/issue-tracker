@@ -37,7 +37,7 @@ export default function IssueList({
   const [filterByCategory, setFilterByCategory] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState<string>("");
 
-  const ITEMS_PER_PAGE = 10;
+ /* const ITEMS_PER_PAGE = 10;*/
 
   const filteredIssues = issues.filter(
     (issue) =>

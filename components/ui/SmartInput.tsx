@@ -4,7 +4,7 @@ import { useState } from "react";
 type SmartInputProps = {
   label: string;
   name: string;
-  value: string;
+  value: string | undefined;
   options: string[];
   placeholder?: string;
   onChange: (value: string) => void;

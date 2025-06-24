@@ -14,9 +14,8 @@ import {
   clients,
   reason,
   categories,
-  initialLanguages
+  initialLanguages,
 } from "./data/issueOptions";
-
 
 interface IssueFormProps {
   onSubmit: (issue: Issue, previewUrl: File | null) => void;
@@ -26,7 +25,7 @@ interface IssueFormProps {
 
 const getFormattedLocalDate = () => {
   const now = new Date();
-  return now.toISOString().slice(0, 16); // for datetime-local input
+  return now.toISOString().slice(0, 16);
 };
 
 const emptyIssue: ConvexIssue = {
@@ -41,7 +40,6 @@ const emptyIssue: ConvexIssue = {
   dateOfIncident: getFormattedLocalDate(),
 };
 
-// ✅ Create a map to link Service # to Project Name
 const serviceProjectMap = new Map<string, string>();
 serviceNumbers.forEach((num, i) => {
   const cleanService = num.trim();
@@ -50,6 +48,14 @@ serviceNumbers.forEach((num, i) => {
     serviceProjectMap.set(cleanService, cleanProject);
   }
 });
+
+ /* 🧩 Link Project Name to Service #
+  useEffect(() => {
+    const index = serviceNumbers.indexOf(issue.agent);
+    if (index !== -1 && projectNames[index]) {
+      setIssue((prev) => ({ ...prev, internetSource: projectNames[index] }));
+    }
+  }, [issue.agent]);*/
 
 export default function IssueForm({
   onSubmit,
@@ -71,7 +77,6 @@ export default function IssueForm({
     }
   }, [initialIssue]);
 
-  // ✅ Link Project Name when agent changes
   useEffect(() => {
     const trimmedAgent = issue.agent.trim();
     const mappedProject = serviceProjectMap.get(trimmedAgent);
@@ -80,28 +85,14 @@ export default function IssueForm({
     }
   }, [issue.agent]);
 
-  /* 🧩 Link Project Name to Service #
-  useEffect(() => {
-    const index = serviceNumbers.indexOf(issue.agent);
-    if (index !== -1 && projectNames[index]) {
-      setIssue((prev) => ({ ...prev, internetSource: projectNames[index] }));
-    }
-  }, [issue.agent]);*/
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log({ selectedImage });
-    onSubmit(issue as Issue, selectedImage ? selectedImage : null);
+    onSubmit(issue, selectedImage);
     setIssue(emptyIssue);
-    setSelectedImage(null); // ✅ Clears image preview
-    setPreviewUrl(null); // ✅ Clears image preview
-
-    const fileInput = document.getElementById(
-      "imageUpload"
-    ) as HTMLInputElement;
-    if (fileInput) {
-      fileInput.value = "";
-    }
+    setSelectedImage(null);
+    setPreviewUrl(null);
+    const fileInput = document.getElementById("imageUpload") as HTMLInputElement;
+    if (fileInput) fileInput.value = "";
   };
 
   const handleChange = (
@@ -160,7 +151,7 @@ export default function IssueForm({
         name="category"
         value={issue.category}
         onChange={handleChange}
-        className="w-full p-2 rounded border border-input bg-input text-foreground focus:outline-none focus:ring focus:ring-ring"
+        className="w-full p-2 border rounded"
         required
       >
         <option value="">Select Category</option>
@@ -186,7 +177,9 @@ export default function IssueForm({
         label="Service #"
         name="agent"
         value={issue.agent}
-        onChange={(val) => setIssue((prev) => ({ ...prev, agent: val.trim() }))}
+        onChange={(val) =>
+          setIssue((prev) => ({ ...prev, agent: val.trim() }))
+        }
         options={serviceNumbers}
         placeholder="Enter or search Service #"
       />
@@ -201,17 +194,19 @@ export default function IssueForm({
         placeholder="Enter or search Client"
       />
 
-      {/* 📌 Project Name (autolinked from Service # but editable) */}
+      {/* 📌 Project Name */}
       <SmartInput
         label="Project Name"
         name="internetSource"
         value={issue.internetSource}
-        onChange={(val) => setIssue((prev) => ({ ...prev, internetSource: val }))}
+        onChange={(val) =>
+          setIssue((prev) => ({ ...prev, internetSource: val }))
+        }
         options={projectNames}
         placeholder="Enter or search Project Name"
       />
 
-      {/* 🧠 Language - Combobox */}
+      {/* 🧠 Language */}
       <div className="relative">
         <Input
           name="language"
@@ -269,6 +264,7 @@ export default function IssueForm({
         onChange={(val) => setIssue((prev) => ({ ...prev, reason: val }))}
         options={reason}
         placeholder="Enter or search Reason"
+        className="w-full p-2 bg-input text-foreground border border-input rounded"
       />
 
       {/* 📝 Description */}
@@ -300,6 +296,7 @@ export default function IssueForm({
         </Button>
       </div>
 
+      {/* 🔍 Modal for Enlarged Image */}
       {enlargedPreview && (
         <div
           className="fixed inset-0 z-50 bg-black bg-opacity-70 flex items-center justify-center"
