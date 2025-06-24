@@ -252,7 +252,7 @@ export default function IssueForm({
       <SmartInput
         label="Reason"
         name="reason"
-        value={issue.reason}
+        value={issue.reason ?? ""}
         onChange={(val) => setIssue((prev) => ({ ...prev, reason: val }))}
         options={reason}
         placeholder="Enter or search Reason"
