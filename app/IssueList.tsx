@@ -74,7 +74,10 @@ export default function IssueList({
   };
 
   const handleDownloadExcel = (category: string, issues: ConvexIssue[]) => {
-    const issuesWithoutImages = issues.map(({ image: _img, imageUrl: _url, ...rest }) => rest);
+    const issuesWithoutImages = issues.map((issue) => {
+      const { image, imageUrl, ...rest } = issue;
+      return rest;
+    });
     exportToJsonExcel(issuesWithoutImages, `${category}-issues-${new Date().toDateString()}`);
   };
 
