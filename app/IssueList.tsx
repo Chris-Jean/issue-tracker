@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -26,6 +28,8 @@ interface IssueListProps {
   onDeleteIssue: (id: MetaIssue["_id"]) => void;
 }
 
+const ITEMS_PER_PAGE = 5;
+
 export default function IssueList({
   issues,
   onSelectIssue,
@@ -36,8 +40,7 @@ export default function IssueList({
   const [sortBy, setSortBy] = useState<string>("date");
   const [filterByCategory, setFilterByCategory] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState<string>("");
-
- /* const ITEMS_PER_PAGE = 10;*/
+  const [pageByCategory, setPageByCategory] = useState<Record<string, number>>({});
 
   const filteredIssues = issues.filter(
     (issue) =>
@@ -70,9 +73,10 @@ export default function IssueList({
     }));
   };
 
-  function handleDownloadExcel(category: string, issues: ConvexIssue[]) {
-    exportToJsonExcel(issues, category + "-issues-" + new Date().toDateString());
-  }
+  const handleDownloadExcel = (category: string, issues: ConvexIssue[]) => {
+    const issuesWithoutImages = issues.map(({ image, imageUrl, ...rest }) => rest);
+    exportToJsonExcel(issuesWithoutImages, `${category}-issues-${new Date().toDateString()}`);
+  };
 
   return (
     <div>
@@ -111,79 +115,145 @@ export default function IssueList({
         </Select>
       </div>
 
-      {/* Render Grouped Issues */}
-      {Object.entries(groupedIssues).map(([category, issues]) => (
-        <div key={category} className="mb-6">
-          <div
-            className="flex items-center justify-between bg-secondary text-secondary-foreground p-2 rounded cursor-pointer"
-            onClick={() => toggleCategory(category)}
-          >
-            <h2 className="text-lg font-semibold">
-              {category} ({issues.length})
-            </h2>
-            {collapsedCategories[category] ? <ChevronRight /> : <ChevronDown />}
-            <Download
-              onClick={() => handleDownloadExcel(category, issues)}
-              className="h-5 w-5"
-            />
-          </div>
+      {/* Render Grouped Issues with Pagination */}
+      {Object.entries(groupedIssues).map(([category, issues]) => {
+        const page = pageByCategory[category] ?? 1;
+        const startIndex = (page - 1) * ITEMS_PER_PAGE;
+        const paginatedIssues = sortedIssues(issues).slice(startIndex, startIndex + ITEMS_PER_PAGE);
+        const totalPages = Math.ceil(issues.length / ITEMS_PER_PAGE);
 
-          {!collapsedCategories[category] && (
-            <ul className="space-y-2 mt-2">
-              {sortedIssues(issues).map((issue) => (
-                <li key={issue.title} className="bg-card text-foreground p-4 rounded shadow border border-border">
-                  <div className="flex justify-between items-center">
-                    <h3
-                      className="font-semibold cursor-pointer hover:underline"
-                      onClick={() => onSelectIssue(issue as MetaIssue)}
+        return (
+          <div key={category} className="mb-6">
+            <div
+              className="flex items-center justify-between bg-secondary text-secondary-foreground p-2 rounded cursor-pointer"
+              onClick={() => toggleCategory(category)}
+            >
+              <h2 className="text-lg font-semibold">
+                {category} ({issues.length})
+              </h2>
+              {collapsedCategories[category] ? <ChevronRight /> : <ChevronDown />}
+              <Download
+                onClick={() => handleDownloadExcel(category, issues)}
+                className="h-5 w-5"
+              />
+            </div>
+
+            {!collapsedCategories[category] && (
+              <>
+                <ul className="space-y-2 mt-2">
+                  {paginatedIssues.map((issue) => (
+                    <li
+                      key={issue._id}
+                      className="bg-card text-foreground p-4 rounded shadow border border-border"
                     >
-                      {issue.title}
-                    </h3>
-                    {issue.imageUrl && (
-                      <Image
-                        src={issue.imageUrl}
-                        width={100}
-                        height={100}
-                        alt={issue.title}
-                        className="rounded-md border border-border"
-                      />
-                    )}
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onEditIssue(issue as MetaIssue)}
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3
+                            className="font-semibold cursor-pointer hover:underline"
+                            onClick={() => onSelectIssue(issue as MetaIssue)}
+                          >
+                            {issue.title}
+                          </h3>
+                          <p className="text-sm text-muted-foreground">Caller ID: {issue.title}</p>
+                          <p className="text-sm text-muted-foreground">Service #: {issue.agent}</p>
+                          <p className="text-sm text-muted-foreground">Client: {issue.userType}</p>
+                          <p className="text-sm text-muted-foreground">Project Name: {issue.internetSource}</p>
+                          <p className="text-sm text-muted-foreground">Language: {issue.language}</p>
+                          <p className="text-sm text-muted-foreground">Reason: {issue.reason}</p>
+                          <p className="text-sm text-muted-foreground">{issue.description}</p>
+                          <p className="text-sm text-muted-foreground">
+                            Date of Incident:{" "}
+                            {issue.dateOfIncident
+                              ? new Date(issue.dateOfIncident).toLocaleString(undefined, {
+                                  dateStyle: "medium",
+                                  timeStyle: "short",
+                                })
+                              : "N/A"}
+                          </p>
+                        </div>
+
+                        {issue.imageUrl && (
+                          <div className="space-y-1 group relative">
+                            <a
+                              href={issue.imageUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <Image
+                                src={issue.imageUrl}
+                                width={100}
+                                height={100}
+                                alt={issue.title}
+                                className="rounded-md border border-border hover:opacity-80 transition"
+                              />
+                              {/* Full image preview on hover */}
+                              <div className="hidden group-hover:block absolute top-0 left-[110%] z-10 border border-border rounded bg-background shadow-lg">
+                                <Image
+                                  src={issue.imageUrl}
+                                  width={300}
+                                  height={300}
+                                  alt="Preview"
+                                  className="object-contain rounded"
+                                />
+                              </div>
+                            </a>
+                            <Button asChild variant="outline" className="text-xs">
+                              <a href={issue.imageUrl} download target="_blank" rel="noopener noreferrer">
+                                Download Image
+                              </a>
+                            </Button>
+                          </div>
+                        )}
+
+                        <div className="flex space-x-2 mt-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => onEditIssue(issue as MetaIssue)}
+                          >
+                            <Pencil className="h-4 w-4 text-muted-foreground" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => onDeleteIssue(issue._id as MetaIssue["_id"])}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+
+                {/* Pagination controls */}
+                {totalPages > 1 && (
+                  <div className="flex justify-center mt-4 space-x-2">
+                    {Array.from({ length: totalPages }, (_, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() =>
+                          setPageByCategory((prev) => ({
+                            ...prev,
+                            [category]: idx + 1,
+                          }))
+                        }
+                        className={`px-3 py-1 text-sm rounded border ${
+                          idx + 1 === page
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-muted-foreground"
+                        }`}
                       >
-                        <Pencil className="h-4 w-4 text-muted-foreground" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onDeleteIssue(issue._id as MetaIssue["_id"])}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
+                        {idx + 1}
+                      </button>
+                    ))}
                   </div>
-                  <p className="text-sm text-muted-foreground">Caller ID: {issue.title}</p>
-                  <p className="text-sm text-muted-foreground">Service #: {issue.agent}</p>
-                  <p className="text-sm text-muted-foreground">Client: {issue.userType}</p>
-                  <p className="text-sm text-muted-foreground">Project Name: {issue.internetSource}</p>
-                  <p className="text-sm text-muted-foreground">Language: {issue.language}</p>
-                  <p className="text-sm text-muted-foreground">Reason: {issue.reason}</p>
-                  <p className="text-sm text-muted-foreground">{issue.description}</p>
-                  <p className="text-sm text-muted-foreground">
-                    Date of Incident:{" "}
-                    {issue.dateOfIncident
-                      ? new Date(issue.dateOfIncident).toLocaleDateString()
-                      : "N/A"}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      ))}
+                )}
+              </>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

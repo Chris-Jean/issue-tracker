@@ -143,7 +143,7 @@ export default function IssueForm({
         name="category"
         value={issue.category}
         onChange={handleChange}
-        className="w-full p-2 border rounded"
+        className="w-full p-2 rounded border border-input bg-input text-foreground focus:outline-none focus:ring focus:ring-ring"
         required
       >
         <option value="">Select Category</option>
