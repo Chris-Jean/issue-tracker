@@ -74,10 +74,11 @@ export default function IssueList({
   };
 
   const handleDownloadExcel = (category: string, issues: ConvexIssue[]) => {
-    const issuesWithoutImages = issues.map((issue) => {
-      const { image: image, imageUrl: imageUrl, ...rest } = issue;
-      return rest;
-    });
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+const issuesWithoutImages = issues.map((issue) => {
+  const { image, imageUrl, ...rest } = issue;
+  return rest;
+});
     exportToJsonExcel(issuesWithoutImages, `${category}-issues-${new Date().toDateString()}`);
   };
 
