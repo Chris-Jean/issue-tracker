@@ -70,6 +70,22 @@ export default function IssueForm({
   const [enlargedPreview, setEnlargedPreview] = useState<string | null>(null);
 
   useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setEnlargedPreview(null);
+      }
+    };
+  
+    if (enlargedPreview) {
+      window.addEventListener("keydown", handleEsc);
+    }
+  
+    return () => {
+      window.removeEventListener("keydown", handleEsc);
+    };
+  }, [enlargedPreview]);
+
+  useEffect(() => {
     if (initialIssue) {
       setIssue(initialIssue);
     } else {
