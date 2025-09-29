@@ -1,6 +1,5 @@
-"use client"
+"use client";
 
-import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { useEffect, useState } from "react";
@@ -24,7 +23,7 @@ export default function RootLayout({
 
   const [theme, setTheme] = useState<string>("light");
 
-  // ✅ Check localStorage and apply theme on first render
+  // ✅ Read theme from localStorage on mount and apply it globally
   useEffect(() => {
     const storedTheme = localStorage.getItem("theme") || "light";
     setTheme(storedTheme);
@@ -32,7 +31,7 @@ export default function RootLayout({
   }, []);
 
   return (
-    <html lang="en">
+    <html lang="en" className={theme === "dark" ? "dark" : ""}>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

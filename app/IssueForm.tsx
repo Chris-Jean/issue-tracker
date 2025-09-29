@@ -123,14 +123,6 @@ export default function IssueForm({
     setIssue((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedImage(file);
-      setPreviewUrl(URL.createObjectURL(file));
-    }
-  };
-
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
 {/* 🖼 Image Upload with Drag & Drop */}
