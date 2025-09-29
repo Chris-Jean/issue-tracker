@@ -25,7 +25,9 @@ interface IssueFormProps {
 
 const getFormattedLocalDate = () => {
   const now = new Date();
-  return now.toISOString().slice(0, 16);
+  return new Date(
+    now.toLocaleString("en-US", { timeZone: "America/New_York" })
+  ).toISOString();
 };
 
 const emptyIssue: ConvexIssue = {
@@ -68,6 +70,7 @@ export default function IssueForm({
   const [query, setQuery] = useState("");
   const [languages, setLanguages] = useState(initialLanguages);
   const [enlargedPreview, setEnlargedPreview] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -130,29 +133,108 @@ export default function IssueForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {/* 🖼 Image Upload */}
-      <div className="mb-4 col-span-2">
-        <label className="block text-muted-foreground mb-2">Image</label>
-        <input
-          type="file"
-          id="imageUpload"
-          accept="image/*"
-          onChange={handleImageChange}
-          className="w-full border border-input rounded bg-input text-foreground"
+{/* 🖼 Image Upload with Drag & Drop */}
+<div className="mb-4 col-span-2">
+  <label htmlFor="imageUpload" className="block text-muted-foreground mb-2">
+    Image
+  </label>
+
+  {/* 📁 Drag & Drop Zone */}
+  <div
+    onDrop={(e) => {
+      e.preventDefault();
+      setIsDragging(false);
+      const file = e.dataTransfer.files?.[0];
+      if (file) {
+        const preview = URL.createObjectURL(file);
+        setSelectedImage(file);
+        setPreviewUrl(preview);
+      }
+    }}
+    onDragOver={(e) => {
+      e.preventDefault();
+      setIsDragging(true);
+    }}
+    onDragLeave={() => setIsDragging(false)}
+    onClick={(e) => {
+      e.preventDefault();
+      document.getElementById("imageUpload")?.click();
+    }}
+    onPaste={(e) => {
+      const file = e.clipboardData?.files?.[0];
+      if (file && file.type.startsWith("image/")) {
+        const preview = URL.createObjectURL(file);
+        setSelectedImage(file);
+        setPreviewUrl(preview);
+      }
+    }}
+    className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition ${
+      isDragging ? "border-primary bg-accent/10" : "border-border"
+    } ${previewUrl ? "bg-muted/30" : "bg-input hover:bg-accent/5"}`}
+  >
+    {!previewUrl && (
+      <p className="text-sm text-muted-foreground">
+        Drag & drop an image here, or{" "}
+        <label
+          htmlFor="imageUpload"
+          className="text-primary underline cursor-pointer"
+          onClick={(e) => e.stopPropagation()}
+        >
+          browse
+        </label>
+      </p>
+    )}
+
+    {/* 📁 Hidden input */}
+    <input
+      type="file"
+      id="imageUpload"
+      accept="image/*"
+      onChange={(e) => {
+        const file = e.target.files?.[0];
+        if (file) {
+          const preview = URL.createObjectURL(file);
+          setSelectedImage(file);
+          setPreviewUrl(preview);
+        }
+      }}
+      className="hidden"
+    />
+
+    {/* 📸 Preview + Remove Button */}
+    {previewUrl && (
+      <div className="mt-4 relative inline-block">
+        <Image
+          src={previewUrl}
+          alt="Preview"
+          width={160}
+          height={160}
+          className="object-contain rounded border cursor-pointer mx-auto"
+          onClick={() => setEnlargedPreview(previewUrl)}
         />
-        {previewUrl && (
-          <div className="mt-2">
-            <Image
-              src={previewUrl}
-              alt="Preview"
-              width={160}
-              height={160}
-              className="object-contain cursor-pointer rounded border"
-              onClick={() => setEnlargedPreview(previewUrl)}
-            />
-          </div>
-        )}
+
+        {/* ❌ Remove button */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation(); // prevent triggering upload click
+            setSelectedImage(null);
+            setPreviewUrl(null);
+          }}
+          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center shadow hover:bg-red-600"
+          title="Remove image"
+        >
+          ✕
+        </button>
+
+        <p className="text-xs text-muted-foreground mt-1 text-center">
+          Click to change
+        </p>
       </div>
+    )}
+  </div>
+</div>
+
 
       {/* 📌 Category */}
       <select
@@ -321,4 +403,4 @@ export default function IssueForm({
       )}
     </form>
   );
-}
+  }

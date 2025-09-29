@@ -168,7 +168,8 @@ const issuesWithoutImages = issues.map((issue) => {
                           <p className="text-sm text-muted-foreground">
                             Date of Incident:{" "}
                             {issue.dateOfIncident
-                              ? new Date(issue.dateOfIncident).toLocaleString(undefined, {
+                              ? new Date(issue.dateOfIncident).toLocaleString("en-US", {
+                                timeZone: "America/New_York",
                                   dateStyle: "medium",
                                   timeStyle: "short",
                                 })

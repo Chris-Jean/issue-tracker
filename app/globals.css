@@ -76,6 +76,13 @@ body {
 }
 }
 
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter: invert(1); /* flips light ↔ dark */
+  cursor: pointer;
+  color: aliceblue
+}
+
+
 @layer base {
   * {
     @apply border-border;

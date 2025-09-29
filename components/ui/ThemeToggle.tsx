@@ -6,18 +6,32 @@ import { useEffect, useState } from 'react'
 export default function ThemeToggle() {
   const [isDark, setIsDark] = useState(false)
 
+  
+  // 🔄 1. Load saved theme on first render
   useEffect(() => {
-    const root = window.document.documentElement
-    if (isDark) {
-      root.classList.add('dark')
+    const savedTheme = localStorage.getItem('theme')
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+
+    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+      document.documentElement.classList.add('dark')
+      setIsDark(true)
     } else {
-      root.classList.remove('dark')
+      document.documentElement.classList.remove('dark')
+      setIsDark(false)
     }
-  }, [isDark])
+  }, [])
+
+  // 🌗 Apply & save theme preference 
+   const toggleTheme = () => {
+    const newTheme = !isDark ? 'dark' : 'light'
+    setIsDark(!isDark)
+    localStorage.setItem('theme', newTheme)
+    document.documentElement.classList.toggle('dark', newTheme === 'dark')
+  }
 
   return (
     <button
-      onClick={() => setIsDark(!isDark)}
+      onClick={toggleTheme}
       className="rounded p-2 border border-gray-300 dark:border-gray-600"
       aria-label="Toggle Theme"
     >
