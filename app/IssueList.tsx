@@ -20,6 +20,7 @@ import {
 import Image from "next/image";
 import { useState } from "react";
 import type { ConvexIssue, MetaIssue } from "./types";
+import { omit } from "@/helpers/objectHelpers";
 
 interface IssueListProps {
   issues: ConvexIssue[];
@@ -75,10 +76,7 @@ export default function IssueList({
 
   const handleDownloadExcel = (category: string, issues: ConvexIssue[]) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const issuesWithoutImages = issues.map((issue) => {
-  const { image, imageUrl, ...rest } = issue;
-  return rest;
-});
+    const issuesWithoutImages = issues.map((issue) => omit(issue, "image", "imageUrl"));
     exportToJsonExcel(issuesWithoutImages, `${category}-issues-${new Date().toDateString()}`);
   };
 
@@ -243,11 +241,10 @@ const issuesWithoutImages = issues.map((issue) => {
                             [category]: idx + 1,
                           }))
                         }
-                        className={`px-3 py-1 text-sm rounded border ${
-                          idx + 1 === page
+                        className={`px-3 py-1 text-sm rounded border ${idx + 1 === page
                             ? "bg-primary text-primary-foreground"
                             : "bg-muted text-muted-foreground"
-                        }`}
+                          }`}
                       >
                         {idx + 1}
                       </button>
