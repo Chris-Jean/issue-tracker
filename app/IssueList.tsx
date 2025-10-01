@@ -20,7 +20,6 @@ import {
 import Image from "next/image";
 import { useState } from "react";
 import type { ConvexIssue, MetaIssue } from "./types";
-import { omit } from "@/helpers/objectHelpers";
 
 interface IssueListProps {
   issues: ConvexIssue[];
