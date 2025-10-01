@@ -75,10 +75,27 @@ export default function IssueList({
   };
 
   const handleDownloadExcel = (category: string, issues: ConvexIssue[]) => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const issuesWithoutImages = issues.map((issue) => omit(issue, "image", "imageUrl"));
-    exportToJsonExcel(issuesWithoutImages, `${category}-issues-${new Date().toDateString()}`);
-  };
+    // 🧹 Clean up fields + rename for export
+    const cleaned = issues.map((issue) => ({
+      "Caller ID": issue.title,
+      "Service #": issue.agent,
+      "Client": issue.userType,
+      "Project Name": issue.internetSource,
+      "Language": issue.language,
+      "Reason": issue.reason,
+      "Description": issue.description,
+      "Category": issue.category,
+      "Date of Incident": issue.dateOfIncident
+        ? new Date(issue.dateOfIncident).toLocaleString("en-US", {
+            timeZone: "America/New_York",
+            dateStyle: "medium",
+            timeStyle: "short",
+          })
+        : "N/A",
+    }));
+  
+    exportToJsonExcel(cleaned, `${category}-issues-${new Date().toDateString()}`);
+  };  
 
   return (
     <div>

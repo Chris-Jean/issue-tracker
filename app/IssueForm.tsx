@@ -148,10 +148,7 @@ export default function IssueForm({
       setIsDragging(true);
     }}
     onDragLeave={() => setIsDragging(false)}
-    onClick={(e) => {
-      e.preventDefault();
-      document.getElementById("imageUpload")?.click();
-    }}
+    
     onPaste={(e) => {
       const file = e.clipboardData?.files?.[0];
       if (file && file.type.startsWith("image/")) {
@@ -167,13 +164,17 @@ export default function IssueForm({
     {!previewUrl && (
       <p className="text-sm text-muted-foreground">
         Drag & drop an image here, or{" "}
-        <label
-          htmlFor="imageUpload"
-          className="text-primary underline cursor-pointer"
-          onClick={(e) => e.stopPropagation()}
-        >
-          browse
-        </label>
+        <span
+  className="text-primary underline cursor-pointer"
+  onClick={(e) => {
+    e.stopPropagation(); 
+    const input = document.getElementById("imageUpload") as HTMLInputElement;
+    if (input) input.click();
+  }}
+>
+  browse
+</span>
+
       </p>
     )}
 
@@ -219,7 +220,13 @@ export default function IssueForm({
           ✕
         </button>
 
-        <p className="text-xs text-muted-foreground mt-1 text-center">
+        <p className="text-xs text-muted-foreground mt-1 text-center"
+        onClick={(e) => {
+          e.stopPropagation();
+          const input = document.getElementById("imageUpload") as HTMLInputElement;
+          if (input) input.click();
+        }}
+        >
           Click to change
         </p>
       </div>
