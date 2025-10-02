@@ -79,26 +79,26 @@ export default function IssueList({
   };
 
   const handleDownloadExcel = (category: string, issues: ConvexIssue[]) => {
-    // 🧹 Clean up fields + rename for export
-    const cleaned = issues.map((issue) => ({
-      "Caller ID": issue.title,
-      "Service #": issue.agent,
-      "Client": issue.userType,
-      "Project Name": issue.internetSource,
-      "Language": issue.language,
-      "Reason": issue.reason,
-      "Description": issue.description,
-      "Category": issue.category,
-      "Date of Incident": issue.dateOfIncident
-        ? new Date(issue.dateOfIncident).toLocaleString("en-US", {
-            timeZone: "America/New_York",
-            dateStyle: "medium",
-            timeStyle: "short",
-          })
-        : "N/A",
-    }));
+    const formattedIssues = issues.map((issue) => {
+      const dateObj = new Date(issue.dateOfIncident);
   
-    exportToJsonExcel(cleaned, `${category}-issues-${new Date().toDateString()}`);
+      return {
+        // ✅ Include only the fields you want to export
+        Title: issue.title,
+        "Service #": issue.agent,
+        Client: issue.userType,
+        "Project Name": issue.internetSource,
+        Language: issue.language,
+        Reason: issue.reason,
+        Description: issue.description,
+        Category: issue.category,
+        // ✅ Split date and time into separate columns
+        Date: dateObj.toLocaleDateString("en-US", { timeZone: "America/New_York" }),
+        Time: dateObj.toLocaleTimeString("en-US", { timeZone: "America/New_York" }),
+      };
+    });
+  
+    exportToJsonExcel(formattedIssues, `${category}-issues-${new Date().toDateString()}`);
   };  
 
   return (
