@@ -42,15 +42,27 @@ export default function IssueList({
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [pageByCategory, setPageByCategory] = useState<Record<string, number>>({});
 
-  const filteredIssues = issues.filter(
-    (issue) =>
+  const filteredIssues = issues.filter((issue) => {
+    const formattedDate = new Date(issue.dateOfIncident).toLocaleDateString("en-US", {
+      timeZone: "America/New_York",
+    });
+    const formattedTime = new Date(issue.dateOfIncident).toLocaleTimeString("en-US", {
+      timeZone: "America/New_York",
+    });
+  
+    return (
       (filterByCategory === "All" || issue.category === filterByCategory) &&
-      (issue.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (
+        issue.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         issue.agent.toLowerCase().includes(searchQuery.toLowerCase()) ||
         issue.language.toLowerCase().includes(searchQuery.toLowerCase()) ||
         issue.reason?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        issue.description.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+        issue.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        formattedDate.includes(searchQuery) || // ✅ date search
+        formattedTime.toLowerCase().includes(searchQuery.toLowerCase()) // ✅ time search
+      )
+    );
+  });  
 
    // ✅ Reset pagination whenever filters, search, or sort change
    useEffect(() => {
