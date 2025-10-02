@@ -15,7 +15,7 @@ export const createIssue = mutation({
     title: v.string(),
     agent: v.string(),
     language: v.string(),
-    description: v.string(),
+    description: v.optional (v.string()),
     userType: v.string(),
     VPN: v.optional(v.string()),
     internetSource: v.string(),

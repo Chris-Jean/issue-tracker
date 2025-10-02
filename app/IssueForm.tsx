@@ -362,7 +362,6 @@ export default function IssueForm({
         value={issue.description}
         onChange={handleChange}
         placeholder="Description"
-        required
         className="bg-input text-foreground border border-input"
       />
 

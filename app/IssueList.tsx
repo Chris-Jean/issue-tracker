@@ -18,7 +18,7 @@ import {
   Trash2,
 } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ConvexIssue, MetaIssue } from "./types";
 
 interface IssueListProps {
@@ -51,6 +51,11 @@ export default function IssueList({
         issue.reason?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         issue.description.toLowerCase().includes(searchQuery.toLowerCase()))
   );
+
+   // ✅ Reset pagination whenever filters, search, or sort change
+   useEffect(() => {
+    setPageByCategory({});
+  }, [searchQuery, filterByCategory, sortBy]);
 
   const groupedIssues = filteredIssues.reduce((acc, issue) => {
     const category = issue.category || "Uncategorized";
@@ -139,6 +144,7 @@ export default function IssueList({
         const startIndex = (page - 1) * ITEMS_PER_PAGE;
         const paginatedIssues = sortedIssues(issues).slice(startIndex, startIndex + ITEMS_PER_PAGE);
         const totalPages = Math.ceil(issues.length / ITEMS_PER_PAGE);
+        
 
         return (
           <div key={category} className="mb-6">
@@ -247,26 +253,128 @@ export default function IssueList({
 
                 {/* Pagination controls */}
                 {totalPages > 1 && (
-                  <div className="flex justify-center mt-4 space-x-2">
-                    {Array.from({ length: totalPages }, (_, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() =>
-                          setPageByCategory((prev) => ({
-                            ...prev,
-                            [category]: idx + 1,
-                          }))
-                        }
-                        className={`px-3 py-1 text-sm rounded border ${idx + 1 === page
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted text-muted-foreground"
-                          }`}
-                      >
-                        {idx + 1}
-                      </button>
-                    ))}
-                  </div>
-                )}
+  <div className="flex justify-center items-center mt-4 space-x-2">
+    {/* ⏮ Jump to first */}
+    <button
+      onClick={() =>
+        setPageByCategory((prev) => ({ ...prev, [category]: 1 }))
+      }
+      disabled={page === 1}
+      className={`px-2 py-1 text-sm rounded border ${
+        page === 1
+          ? "bg-muted text-muted-foreground cursor-not-allowed"
+          : "bg-input hover:bg-accent/10"
+      }`}
+    >
+      ⏮
+    </button>
+
+    {/* ◀ Previous */}
+    <button
+      onClick={() =>
+        setPageByCategory((prev) => ({
+          ...prev,
+          [category]: Math.max(1, page - 1),
+        }))
+      }
+      disabled={page === 1}
+      className={`px-2 py-1 text-sm rounded border ${
+        page === 1
+          ? "bg-muted text-muted-foreground cursor-not-allowed"
+          : "bg-input hover:bg-accent/10"
+      }`}
+    >
+      ◀
+    </button>
+
+    {/* Dynamic pages with ellipses */}
+    {(() => {
+      const pages: (number | string)[] = [];
+      const showPages = 4;
+
+      if (totalPages <= showPages + 2) {
+        // 👇 Show all pages if there are few
+        for (let i = 1; i <= totalPages; i++) pages.push(i);
+      } else {
+        // 👇 Always show first page
+        pages.push(1);
+
+        // 👇 Add left ellipsis
+        if (page > showPages - 1) pages.push("...");
+
+        // 👇 Calculate visible window
+        const start = Math.max(2, page - 1);
+        const end = Math.min(totalPages - 1, start + showPages - 1);
+
+        for (let i = start; i <= end; i++) pages.push(i);
+
+        // 👇 Add right ellipsis
+        if (end < totalPages - 1) pages.push("...");
+
+        // 👇 Always show last page
+        pages.push(totalPages);
+      }
+
+      return pages.map((p, idx) =>
+        p === "..." ? (
+          <span key={`ellipsis-${idx}`} className="px-3 py-1 text-sm">
+            ...
+          </span>
+        ) : (
+          <button
+            key={p}
+            onClick={() =>
+              setPageByCategory((prev) => ({ ...prev, [category]: p as number }))
+            }
+            className={`px-3 py-1 text-sm rounded border ${
+              p === page
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground hover:bg-accent/10"
+            }`}
+          >
+            {p}
+          </button>
+        )
+      );
+    })()}
+
+    {/* ▶ Next */}
+    <button
+      onClick={() =>
+        setPageByCategory((prev) => ({
+          ...prev,
+          [category]: Math.min(totalPages, page + 1),
+        }))
+      }
+      disabled={page === totalPages}
+      className={`px-2 py-1 text-sm rounded border ${
+        page === totalPages
+          ? "bg-muted text-muted-foreground cursor-not-allowed"
+          : "bg-input hover:bg-accent/10"
+      }`}
+    >
+      ▶
+    </button>
+
+    {/* ⏭ Jump to last */}
+    <button
+      onClick={() =>
+        setPageByCategory((prev) => ({
+          ...prev,
+          [category]: totalPages,
+        }))
+      }
+      disabled={page === totalPages}
+      className={`px-2 py-1 text-sm rounded border ${
+        page === totalPages
+          ? "bg-muted text-muted-foreground cursor-not-allowed"
+          : "bg-input hover:bg-accent/10"
+      }`}
+    >
+      ⏭
+    </button>
+  </div>
+)}
               </>
             )}
           </div>
