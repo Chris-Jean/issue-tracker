@@ -146,3 +146,36 @@ export const getByIdentifier = query({
     );
   },
 });
+
+// 📅 Get Issues Within a Date Range (for archives)
+export const getIssuesByDateRange = query({
+  args: {
+    startDate: v.optional(v.string()), // ISO string or undefined
+    endDate: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    let issues = await ctx.db.query("issues").collect();
+
+    // ✅ Filter by date range (server-side)
+    if (args.startDate || args.endDate) {
+      issues = issues.filter((issue) => {
+        const incidentDate = new Date(issue.dateOfIncident).getTime();
+        const afterStart = args.startDate ? incidentDate >= new Date(args.startDate).getTime() : true;
+        const beforeEnd = args.endDate ? incidentDate <= new Date(args.endDate).getTime() : true;
+        return afterStart && beforeEnd;
+      });
+    }
+
+    // ✅ Convert storage IDs to URLs for preview/download
+    return await Promise.all(
+      issues.map(async (issue) => {
+        if (issue.image) {
+          const imageUrl = await ctx.storage.getUrl(issue.image);
+          return { ...issue, imageUrl };
+        }
+        return issue;
+      })
+    );
+  },
+});
+
