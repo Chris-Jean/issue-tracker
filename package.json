@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "predeploy": "npm run lint && npx convex codegen && npx convex deploy && npm run build",
+    "deploy:local": "npm run predeploy && npm start"
   },
   "dependencies": {
     "@radix-ui/react-select": "^2.1.6",
@@ -17,7 +19,7 @@
     "convex": "^1.19.4",
     "file-saver": "^2.0.5",
     "lucide-react": "^0.475.0",
-    "next": "14.2.16",
+    "next": "^14.2.33",
     "react": "^18",
     "react-dom": "^18",
     "tailwind-merge": "^3.0.1",

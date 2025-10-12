@@ -20,31 +20,43 @@ export const createIssue = mutation({
     VPN: v.optional(v.string()),
     internetSource: v.string(),
     category: v.string(),
-    reason: v.optional( v.string()),
+    reason: v.optional(v.string()),
     dateOfIncident: v.string(),
     image: v.optional(v.id("_storage")),
   },
   handler: async (ctx, args) => {
     try {
-    const {image, ...issueData } = args;
-    const issue = image ? {...issueData, image } : issueData;
+      const { image, ...issueData } = args;
+      const issue = image ? { ...issueData, image } : issueData;
 
-    const issueId = await ctx.db.insert("issues", issue);
-    return issueId;
-  } catch (error) {
-    console.error ("Error creating issue:", error);
-    throw new Error("Failed to create issue. Please try again.");
-  }
-},
+      // ✅ Force archived = false for all new issues
+      const issueId = await ctx.db.insert("issues", {
+        ...issue,
+        archived: false,
+      });
+
+      return issueId;
+    } catch (error) {
+      console.error("Error creating issue:", error);
+      throw new Error("Failed to create issue. Please try again.");
+    }
+  },
 });
 
 // Read
 export const getIssues = query({
   args: {},
   handler: async (ctx) => {
-    const issues = await ctx.db.query("issues").collect();
+    const issues = await ctx.db
+      .query("issues")
+      .filter((q) =>
+        q.and(
+          q.or(q.eq(q.field("archived"), false), q.eq(q.field("archived"), undefined)),
+          q.or(q.eq(q.field("deleted"), false), q.eq(q.field("deleted"), undefined))
+        )
+      )
+      .collect();
 
-    // Convert storage IDs to URLs
     return await Promise.all(
       issues.map(async (issue) => {
         if (issue.image) {
@@ -56,6 +68,7 @@ export const getIssues = query({
     );
   },
 });
+
 export const getIssue = query({
   args: { id: v.id("issues") },
   handler: async (ctx, args) => {
@@ -67,6 +80,7 @@ export const getIssue = query({
     return issue;
   },
 });
+
 // Update
 export const updateIssue = mutation({
   args: {
@@ -90,17 +104,21 @@ export const updateIssue = mutation({
 });
 
 // Delete
+// ✅ Convex: Delete only non-archived issues
 export const deleteIssue = mutation({
   args: { id: v.id("issues") },
   handler: async (ctx, args) => {
     const issue = await ctx.db.get(args.id);
+    if (!issue) throw new Error("Issue not found");
 
-    // Delete the image from storage if it exists
-    if (issue && issue.image) {
-      await ctx.storage.delete(issue.image);
+    // 🚫 Prevent deleting archived issues (safety check)
+    if (issue.archived) {
+      throw new Error("Cannot delete archived issue from dashboard");
     }
 
-    await ctx.db.delete(args.id);
+    // ✅ Soft delete instead of permanent removal
+    await ctx.db.patch(args.id, { deleted: true });
+    return { message: "Issue marked as deleted" };
   },
 });
 
@@ -150,13 +168,12 @@ export const getByIdentifier = query({
 // 📅 Get Issues Within a Date Range (for archives)
 export const getIssuesByDateRange = query({
   args: {
-    startDate: v.optional(v.string()), // ISO string or undefined
+    startDate: v.optional(v.string()),
     endDate: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     let issues = await ctx.db.query("issues").collect();
 
-    // ✅ Filter by date range (server-side)
     if (args.startDate || args.endDate) {
       issues = issues.filter((issue) => {
         const incidentDate = new Date(issue.dateOfIncident).getTime();
@@ -166,7 +183,56 @@ export const getIssuesByDateRange = query({
       });
     }
 
-    // ✅ Convert storage IDs to URLs for preview/download
+    // 🧹 Drop image fields before returning
+    return issues.map(({ image, ...rest }) => rest);
+  },
+});
+
+// ✅ Archive an issue instead of deleting
+export const archiveIssue = mutation({
+  args: { id: v.id("issues") },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.id, { archived: true });
+  },
+});
+
+// ✅ Get only archived issues
+export const getArchivedIssues = query({
+  args: {},
+  handler: async (ctx) => {
+    const archivedIssues = await ctx.db
+      .query("issues")
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("archived"), true),
+          q.or(q.eq(q.field("deleted"), false), q.eq(q.field("deleted"), undefined))
+        )
+      )
+      .collect();
+
+    return await Promise.all(
+      archivedIssues.map(async (issue) => {
+        if (issue.image) {
+          const imageUrl = await ctx.storage.getUrl(issue.image);
+          return { ...issue, imageUrl };
+        }
+        return issue;
+      })
+    );
+  },
+});
+
+// ✅ Get only active (non-archived) issues for the dashboard
+export const getActiveIssues = query({
+  args: {},
+  handler: async (ctx) => {
+    const issues = await ctx.db
+      .query("issues")
+      .filter((q) =>
+        q.or(q.eq(q.field("archived"), false), q.eq(q.field("archived"), undefined))
+      )
+      .collect();
+
     return await Promise.all(
       issues.map(async (issue) => {
         if (issue.image) {
@@ -178,4 +244,43 @@ export const getIssuesByDateRange = query({
     );
   },
 });
+
+// ✅ Archive All Issues (sets archived = true)
+export const archiveAllIssues = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const allIssues = await ctx.db.query("issues").collect();
+    for (const issue of allIssues) {
+      await ctx.db.patch(issue._id, { archived: true });
+    }
+    return "All issues archived successfully.";
+  },
+});
+
+// ✅ Delete All Non-Archived Issues
+export const deleteAllActiveIssues = mutation({
+  args: {},
+  handler: async (ctx) => {
+    // ✅ Collect all issues that are NOT archived
+    const activeIssues = await ctx.db
+      .query("issues")
+      .filter(q => 
+        q.or(
+          q.eq(q.field("archived"), false),
+          q.eq(q.field("archived"), undefined)
+        )
+      )
+      .collect();
+
+    // 🧹 Delete associated images if any
+    for (const issue of activeIssues) {
+      if (issue.image) await ctx.storage.delete(issue.image);
+      await ctx.db.delete(issue._id);
+    }
+
+    // ✅ Return useful info
+    return { message: `Deleted ${activeIssues.length} active issues successfully.` };
+  },
+});
+
 

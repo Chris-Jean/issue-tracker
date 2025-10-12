@@ -15,6 +15,8 @@ export default defineSchema({
     dateOfIncident: v.string(),
     imageUrl: v.optional(v.id("_storage")),
     image: v.optional(v.id("_storage")),
+    archived: v.optional(v.boolean()),
+    deleted: v.optional(v.boolean()),
   })
     .index("by_agent", ["agent"])
     .index("by_title", ["title"])

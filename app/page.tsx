@@ -25,6 +25,7 @@ function Home() {
   const updateIssue = useMutation(api.issues.updateIssue);
   const deleteIssue = useMutation(api.issues.deleteIssue);
   const generateUploadUrl = useMutation(api.issues.generateUploadUrl);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const [selectedIssue, setSelectedIssue] = useState<MetaIssue | null>(null);
 
@@ -105,10 +106,12 @@ function Home() {
           <h2 className="text-xl font-semibold mb-2">Issues</h2>
           {issues && (
             <IssueList
+            key={refreshKey}
               issues={issues}
               onSelectIssue={setSelectedIssue}
               onEditIssue={setSelectedIssue}
               onDeleteIssue={handleDeleteIssue}
+              onRefresh={() => setRefreshKey((prev) => prev + 1)}
             />
           )}
         </div>

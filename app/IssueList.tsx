@@ -20,12 +20,15 @@ import {
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import type { ConvexIssue, MetaIssue } from "./types";
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 interface IssueListProps {
   issues: ConvexIssue[];
   onSelectIssue: (issue: MetaIssue) => void;
   onEditIssue: (issue: MetaIssue) => void;
   onDeleteIssue: (id: MetaIssue["_id"]) => void;
+  onRefresh: () => void;
 }
 
 const ITEMS_PER_PAGE = 5;
@@ -35,7 +38,15 @@ export default function IssueList({
   onSelectIssue,
   onEditIssue,
   onDeleteIssue,
+  onRefresh,
 }: IssueListProps) {
+  const archiveAll = useMutation(api.issues.archiveAllIssues);
+  const deleteAllActive = useMutation(api.issues.deleteAllActiveIssues);
+  //const archiveIssue = useMutation(api.issues.archiveIssue); future use
+
+  
+  const [loadingAction, setLoadingAction] = useState(false);
+
   const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({});
   const [sortBy, setSortBy] = useState<string>("date");
   const [filterByCategory, setFilterByCategory] = useState<string>("All");
@@ -118,6 +129,47 @@ export default function IssueList({
       <h2 className="text-xl font-semibold mb-4 text-foreground">
         Total Issues: {issues.length}
       </h2>
+
+{/* 🧭 Global Actions */}
+<div className="flex justify-between items-center mb-6">
+  <h2 className="text-xl font-semibold text-foreground">Issue Dashboard</h2>
+
+  <div className="flex space-x-3">
+  <Button
+  variant="secondary"
+  disabled={loadingAction}
+  onClick={async () => {
+    if (confirm("Archive all active issues?")) {
+      setLoadingAction(true);
+      await archiveAll();
+      onRefresh();
+      setLoadingAction(false);
+      const result = await archiveAll();
+      alert(`✅ Archived ${result.count} issues successfully!`);
+    }
+  }}
+>
+  {loadingAction ? "Archiving..." : "🗃️ Archive All"}
+</Button>
+
+    <Button
+      variant="destructive"
+      onClick={async () => {
+        if (
+          confirm("⚠️ This will permanently delete all non-archived issues. Continue?")
+        ) {
+          await deleteAllActive();
+          onRefresh();
+          const result = await archiveAll();
+          alert(`🗑️ Deleted ${result.count} issues permanently (${result.count} total).`);
+        }
+      }}
+    >
+      🗑️ Delete All
+    </Button>
+  </div>
+</div>
+
 
       {/* Search and Filters */}
       <div className="flex space-x-4 mb-4">
