@@ -260,7 +260,7 @@ export const archiveAllIssues = mutation({
       await ctx.db.patch(issue._id, { archived: true });
     }
 
-    return { count: allIssues.length }; // ✅ Return an object instead of a string
+    return { count: allIssues.length };
   },
 });
 

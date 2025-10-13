@@ -145,9 +145,6 @@ export default function IssueList({
         const result = await archiveAll();
         alert(`✅ Archived ${result.count} issues successfully!`);
 
-        // ✅ Optional: Keep dashboard visible until user refreshes manually
-        // Simply do NOT call onRefresh() here
-        // No need to clear local list either
       } catch (err) {
         console.error("Error archiving all:", err);
         alert("⚠️ Failed to archive all issues.");
