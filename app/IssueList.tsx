@@ -141,32 +141,42 @@ export default function IssueList({
   onClick={async () => {
     if (confirm("Archive all active issues?")) {
       setLoadingAction(true);
-      await archiveAll();
-      onRefresh();
-      setLoadingAction(false);
-      const result = await archiveAll();
-      alert(`✅ Archived ${result.count} issues successfully!`);
+      try {
+        const result = await archiveAll();
+        alert(`✅ Archived ${result.count} issues successfully!`);
+
+        // ✅ Optional: Keep dashboard visible until user refreshes manually
+        // Simply do NOT call onRefresh() here
+        // No need to clear local list either
+      } catch (err) {
+        console.error("Error archiving all:", err);
+        alert("⚠️ Failed to archive all issues.");
+      } finally {
+        setLoadingAction(false);
+      }
     }
   }}
 >
   {loadingAction ? "Archiving..." : "🗃️ Archive All"}
 </Button>
 
-    <Button
-      variant="destructive"
-      onClick={async () => {
-        if (
-          confirm("⚠️ This will permanently delete all non-archived issues. Continue?")
-        ) {
-          await deleteAllActive();
-          onRefresh();
-          const result = await archiveAll();
-          alert(`🗑️ Deleted ${result.count} issues permanently (${result.count} total).`);
-        }
-      }}
-    >
-      🗑️ Delete All
-    </Button>
+<Button
+  variant="destructive"
+  onClick={async () => {
+    if (confirm("⚠️ This will permanently delete all non-archived issues. Continue?")) {
+      try {
+        const result = await deleteAllActive();
+        alert(`🗑️ ${result.message}`);
+        onRefresh(); // ✅ Refresh only after delete
+      } catch (err) {
+        console.error("Error deleting all active issues:", err);
+        alert("⚠️ Failed to delete all active issues.");
+      }
+    }
+  }}
+>
+  🗑️ Delete All
+</Button>
   </div>
 </div>
 

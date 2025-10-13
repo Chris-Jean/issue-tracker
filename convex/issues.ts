@@ -249,38 +249,42 @@ export const getActiveIssues = query({
 export const archiveAllIssues = mutation({
   args: {},
   handler: async (ctx) => {
-    const allIssues = await ctx.db.query("issues").collect();
+    const allIssues = await ctx.db
+      .query("issues")
+      .filter(q =>
+        q.or(q.eq(q.field("archived"), false), q.eq(q.field("archived"), undefined))
+      )
+      .collect();
+
     for (const issue of allIssues) {
       await ctx.db.patch(issue._id, { archived: true });
     }
-    return "All issues archived successfully.";
+
+    return { count: allIssues.length }; // ✅ Return an object instead of a string
   },
 });
+
 
 // ✅ Delete All Non-Archived Issues
 export const deleteAllActiveIssues = mutation({
   args: {},
   handler: async (ctx) => {
-    // ✅ Collect all issues that are NOT archived
+    // ✅ Only delete issues that are NOT archived
     const activeIssues = await ctx.db
       .query("issues")
-      .filter(q => 
-        q.or(
-          q.eq(q.field("archived"), false),
-          q.eq(q.field("archived"), undefined)
+      .filter((q) =>
+        q.and(
+          q.or(q.eq(q.field("archived"), false), q.eq(q.field("archived"), undefined)),
+          q.or(q.eq(q.field("deleted"), false), q.eq(q.field("deleted"), undefined))
         )
       )
       .collect();
 
-    // 🧹 Delete associated images if any
     for (const issue of activeIssues) {
       if (issue.image) await ctx.storage.delete(issue.image);
       await ctx.db.delete(issue._id);
     }
 
-    // ✅ Return useful info
     return { message: `Deleted ${activeIssues.length} active issues successfully.` };
   },
 });
-
-
