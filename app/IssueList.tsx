@@ -9,22 +9,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { exportToJsonExcel } from "@/helpers/fileHelpers";
 import {
   ChevronDown,
   ChevronRight,
-  Download,
   Pencil,
   Trash2,
+  Archive,
 } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useState, useMemo } from "react";
 import type { ConvexIssue, MetaIssue } from "./types";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 
 interface IssueListProps {
-  issues: ConvexIssue[];
+  issues?: ConvexIssue[];
   onSelectIssue: (issue: MetaIssue) => void;
   onEditIssue: (issue: MetaIssue) => void;
   onDeleteIssue: (id: MetaIssue["_id"]) => void;
@@ -40,155 +39,109 @@ export default function IssueList({
   onDeleteIssue,
   onRefresh,
 }: IssueListProps) {
-  const archiveAll = useMutation(api.issues.archiveAllIssues);
+  const archiveIssue = useMutation(api.issues.archiveIssue);
   const deleteAllActive = useMutation(api.issues.deleteAllActiveIssues);
-  //const archiveIssue = useMutation(api.issues.archiveIssue); future use
 
-  
-  const [loadingAction, setLoadingAction] = useState(false);
-
-  const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({});
+  const [collapsedMonths, setCollapsedMonths] = useState<Record<string, boolean>>({});
+  const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
   const [sortBy, setSortBy] = useState<string>("date");
   const [filterByCategory, setFilterByCategory] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [pageByCategory, setPageByCategory] = useState<Record<string, number>>({});
+  const [pageByMonth, setPageByMonth] = useState<Record<string, number>>({});
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
 
-  const filteredIssues = issues.filter((issue) => {
-    const formattedDate = new Date(issue.dateOfIncident).toLocaleDateString("en-US", {
-      timeZone: "America/New_York",
+  const isLoading = typeof issues === "undefined";
+
+  // 🔹 Filter & Sort
+  const filteredIssues = useMemo(() => {
+    if (!issues || !Array.isArray(issues)) return [];
+
+    return issues.filter((issue) => {
+      const date = new Date(issue.dateOfIncident);
+const start = startDate ? new Date(startDate + "T00:00:00") : null;
+const end = endDate ? new Date(endDate + "T23:59:59") : null;
+
+const afterStart = start ? date >= start : true;
+const beforeEnd = end ? date <= end : true;
+
+      const matchCategory =
+        filterByCategory === "All" || issue.category === filterByCategory;
+
+      const q = searchQuery.trim().toLowerCase();
+      const matchSearch =
+        !q ||
+        issue.title.toLowerCase().includes(q) ||
+        issue.agent.toLowerCase().includes(q) ||
+        issue.language.toLowerCase().includes(q) ||
+        (issue.reason || "").toLowerCase().includes(q) ||
+        (issue.description || "").toLowerCase().includes(q);
+
+      return afterStart && beforeEnd && matchCategory && matchSearch;
     });
-    const formattedTime = new Date(issue.dateOfIncident).toLocaleTimeString("en-US", {
-      timeZone: "America/New_York",
-    });
-  
-    return (
-      (filterByCategory === "All" || issue.category === filterByCategory) &&
-      (
-        issue.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        issue.agent.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        issue.language.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        issue.reason?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        issue.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        formattedDate.includes(searchQuery) || // ✅ date search
-        formattedTime.toLowerCase().includes(searchQuery.toLowerCase()) // ✅ time search
-      )
-    );
-  });  
+  }, [issues, searchQuery, filterByCategory, startDate, endDate]);
 
-   // ✅ Reset pagination whenever filters, search, or sort change
-   useEffect(() => {
-    setPageByCategory({});
-  }, [searchQuery, filterByCategory, sortBy]);
+  // 🔹 Group by month-year
+  const groupedByMonth = useMemo(() => {
+    return filteredIssues.reduce((acc, issue) => {
+      const date = issue.dateOfIncident ? new Date(issue.dateOfIncident) : new Date();
+      const monthKey = date.toLocaleString("default", { month: "long", year: "numeric" });
+      if (!acc[monthKey]) acc[monthKey] = [];
+      acc[monthKey].push(issue);
+      return acc;
+    }, {} as Record<string, ConvexIssue[]>);
+  }, [filteredIssues]);
 
-  const groupedIssues = filteredIssues.reduce((acc, issue) => {
-    const category = issue.category || "Uncategorized";
-    if (!acc[category]) acc[category] = [];
-    acc[category].push(issue);
-    return acc;
-  }, {} as Record<string, ConvexIssue[]>);
-
-  const sortedIssues = (issues: ConvexIssue[]) => {
-    return [...issues].sort((a, b) => {
+  const sortedIssues = (arr: ConvexIssue[]) => {
+    return [...arr].sort((a, b) => {
       if (sortBy === "agent") return a.agent.localeCompare(b.agent);
       return new Date(b.dateOfIncident).getTime() - new Date(a.dateOfIncident).getTime();
     });
   };
 
-  const toggleCategory = (category: string) => {
-    setCollapsedCategories((prev) => ({
-      ...prev,
-      [category]: !prev[category],
-    }));
+  const toggleMonth = (month: string) => {
+    setCollapsedMonths((prev) => ({ ...prev, [month]: !prev[month] }));
   };
 
-  const handleDownloadExcel = (category: string, issues: ConvexIssue[]) => {
-    const formattedIssues = issues.map((issue) => {
-      const dateObj = new Date(issue.dateOfIncident);
-  
-      return {
-        // ✅ Include only the fields you want to export
-        Title: issue.title,
-        "Service #": issue.agent,
-        Client: issue.userType,
-        "Project Name": issue.internetSource,
-        Language: issue.language,
-        Reason: issue.reason,
-        Description: issue.description,
-        Category: issue.category,
-        // ✅ Split date and time into separate columns
-        Date: dateObj.toLocaleDateString("en-US", { timeZone: "America/New_York" }),
-        Time: dateObj.toLocaleTimeString("en-US", { timeZone: "America/New_York" }),
-      };
-    });
-  
-    exportToJsonExcel(formattedIssues, `${category}-issues-${new Date().toDateString()}`);
-  };  
+  const toggleCard = (id: string) => {
+    setExpandedCards((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const handleArchive = async (id: string) => {
+    if (!confirm("Archive this issue?")) return;
+    try {
+      await archiveIssue({ id });
+      onRefresh();
+    } catch (err) {
+      console.error("Archive failed", err);
+    }
+  };
+
+  const handleDeleteAll = async () => {
+    if (!confirm("⚠️ This will permanently delete all non-archived issues. Continue?")) return;
+    try {
+      await deleteAllActive();
+      onRefresh();
+      alert("🗑️ Deleted all active issues successfully!");
+    } catch (err) {
+      console.error("Delete all failed", err);
+    }
+  };
 
   return (
-    <div>
-      <h2 className="text-xl font-semibold mb-4 text-foreground">
-        Total Issues: {issues.length}
-      </h2>
-
-{/* 🧭 Global Actions */}
-<div className="flex justify-between items-center mb-6">
-  <h2 className="text-xl font-semibold text-foreground">Issue Dashboard</h2>
-
-  <div className="flex space-x-3">
-  <Button
-  variant="secondary"
-  disabled={loadingAction}
-  onClick={async () => {
-    if (confirm("Archive all active issues?")) {
-      setLoadingAction(true);
-      try {
-        const result = await archiveAll();
-        alert(`✅ Archived ${result.count} issues successfully!`);
-
-      } catch (err) {
-        console.error("Error archiving all:", err);
-        alert("⚠️ Failed to archive all issues.");
-      } finally {
-        setLoadingAction(false);
-      }
-    }
-  }}
->
-  {loadingAction ? "Archiving..." : "🗃️ Archive All"}
-</Button>
-
-<Button
-  variant="destructive"
-  onClick={async () => {
-    if (confirm("⚠️ This will permanently delete all non-archived issues. Continue?")) {
-      try {
-        const result = await deleteAllActive();
-        alert(`🗑️ ${result.message}`);
-        onRefresh(); // ✅ Refresh only after delete
-      } catch (err) {
-        console.error("Error deleting all active issues:", err);
-        alert("⚠️ Failed to delete all active issues.");
-      }
-    }
-  }}
->
-  🗑️ Delete All
-</Button>
-  </div>
-</div>
-
-
-      {/* Search and Filters */}
-      <div className="flex space-x-4 mb-4">
+    <div className="flex flex-col">
+      {/* 🔍 Filters */}
+      <div className="flex flex-wrap gap-3 mb-6">
         <Input
           type="text"
-          placeholder="Search issues..."
+          placeholder="Search tickets..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full sm:w-1/4"
         />
 
         <Select value={filterByCategory} onValueChange={setFilterByCategory}>
-          <SelectTrigger>
+          <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Filter by Category" />
           </SelectTrigger>
           <SelectContent>
@@ -199,7 +152,7 @@ export default function IssueList({
         </Select>
 
         <Select value={sortBy} onValueChange={setSortBy}>
-          <SelectTrigger>
+          <SelectTrigger className="w-[160px]">
             <SelectValue placeholder="Sort by" />
           </SelectTrigger>
           <SelectContent>
@@ -207,250 +160,144 @@ export default function IssueList({
             <SelectItem value="agent">Service #</SelectItem>
           </SelectContent>
         </Select>
+
+        <Input
+  type="date"
+  value={startDate}
+  onChange={(e) => setStartDate(e.target.value)}
+  className="[color-scheme:light] dark:[color-scheme:dark]"
+/>
+<Input
+  type="date"
+  value={endDate}
+  onChange={(e) => setEndDate(e.target.value)}
+  className="[color-scheme:light] dark:[color-scheme:dark]"
+/>
+
+        <Button variant="destructive" onClick={handleDeleteAll}>
+          🗑️ Delete All
+        </Button>
       </div>
 
-      {/* Render Grouped Issues with Pagination */}
-      {Object.entries(groupedIssues).map(([category, issues]) => {
-        const page = pageByCategory[category] ?? 1;
-        const startIndex = (page - 1) * ITEMS_PER_PAGE;
-        const paginatedIssues = sortedIssues(issues).slice(startIndex, startIndex + ITEMS_PER_PAGE);
-        const totalPages = Math.ceil(issues.length / ITEMS_PER_PAGE);
-        
+      {isLoading && <p className="text-muted-foreground">Loading tickets…</p>}
 
-        return (
-          <div key={category} className="mb-6">
-            <div
-              className="flex items-center justify-between bg-secondary text-secondary-foreground p-2 rounded cursor-pointer"
-              onClick={() => toggleCategory(category)}
-            >
-              <h2 className="text-lg font-semibold">
-                {category} ({issues.length})
-              </h2>
-              {collapsedCategories[category] ? <ChevronRight /> : <ChevronDown />}
-              <Download
-                onClick={() => handleDownloadExcel(category, issues)}
-                className="h-5 w-5"
-              />
-            </div>
+      {/* 📅 Tickets grouped by month */}
+      {Object.entries(groupedByMonth).length === 0 && !isLoading ? (
+        <p className="text-muted-foreground">No tickets found for this range.</p>
+      ) : (
+        Object.entries(groupedByMonth).map(([month, monthIssues]) => {
+          const page = pageByMonth[month] ?? 1;
+          const totalPages = Math.ceil(monthIssues.length / ITEMS_PER_PAGE);
+          const paginated = sortedIssues(monthIssues).slice(
+            (page - 1) * ITEMS_PER_PAGE,
+            page * ITEMS_PER_PAGE
+          );
 
-            {!collapsedCategories[category] && (
-              <>
-                <ul className="space-y-2 mt-2">
-                  {paginatedIssues.map((issue) => (
-                    <li
-                      key={issue._id}
-                      className="bg-card text-foreground p-4 rounded shadow border border-border"
-                    >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3
-                            className="font-semibold cursor-pointer hover:underline"
-                            onClick={() => onSelectIssue(issue as MetaIssue)}
-                          >
-                            {issue.title}
-                          </h3>
-                          <p className="text-sm text-muted-foreground">Caller ID: {issue.title}</p>
-                          <p className="text-sm text-muted-foreground">Service #: {issue.agent}</p>
-                          <p className="text-sm text-muted-foreground">Client: {issue.userType}</p>
-                          <p className="text-sm text-muted-foreground">Project Name: {issue.internetSource}</p>
-                          <p className="text-sm text-muted-foreground">Language: {issue.language}</p>
-                          <p className="text-sm text-muted-foreground">Reason: {issue.reason}</p>
-                          <p className="text-sm text-muted-foreground">{issue.description}</p>
-                          <p className="text-sm text-muted-foreground">
-                            Date of Incident:{" "}
-                            {issue.dateOfIncident
-                              ? new Date(issue.dateOfIncident).toLocaleString("en-US", {
-                                timeZone: "America/New_York",
-                                  dateStyle: "medium",
-                                  timeStyle: "short",
-                                })
-                              : "N/A"}
-                          </p>
+          return (
+            <div key={month} className="mb-6 border rounded-md overflow-hidden">
+              <div
+                className="flex justify-between items-center bg-secondary text-secondary-foreground p-2 cursor-pointer"
+                onClick={() => toggleMonth(month)}
+              >
+                <h2 className="font-semibold text-lg">
+                  {month} ({monthIssues.length})
+                </h2>
+                {collapsedMonths[month] ? <ChevronRight /> : <ChevronDown />}
+              </div>
+
+              {!collapsedMonths[month] && (
+                <div className="p-3 bg-card">
+                  {paginated.map((issue) => {
+                    const isExpanded = expandedCards[issue._id];
+                    return (
+                      <div
+                        key={issue._id}
+                        className="border p-3 mb-3 rounded bg-background cursor-pointer transition-all"
+                        onClick={() => toggleCard(issue._id)}
+                      >
+                        {/* Always visible header */}
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <h3 className="font-semibold">{issue.title}</h3>
+                            <p className="text-sm text-muted-foreground">
+                              {new Date(issue.dateOfIncident).toLocaleDateString()} | Service #: {issue.agent}
+                            </p>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onEditIssue(issue as MetaIssue);
+                              }}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleArchive(issue._id);
+                              }}
+                            >
+                              <Archive className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onDeleteIssue(issue._id);
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                            {isExpanded ? <ChevronDown /> : <ChevronRight />}
+                          </div>
                         </div>
 
-                        {issue.imageUrl && (
-                          <div className="space-y-1 group relative">
-                            <a
-                              href={issue.imageUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              <Image
-                                src={issue.imageUrl}
-                                width={100}
-                                height={100}
-                                alt={issue.title}
-                                className="rounded-md border border-border hover:opacity-80 transition"
-                              />
-                              {/* Full image preview on hover */}
-                              <div className="hidden group-hover:block absolute top-0 left-[110%] z-10 border border-border rounded bg-background shadow-lg">
+                        {/* Expanded details */}
+                        {isExpanded && (
+                          <div className="mt-3 space-y-2">
+                            {issue.imageUrl && (
+                              <div className="w-32 h-32 border rounded overflow-hidden">
                                 <Image
                                   src={issue.imageUrl}
-                                  width={300}
-                                  height={300}
-                                  alt="Preview"
-                                  className="object-contain rounded"
+                                  alt={issue.title}
+                                  width={128}
+                                  height={128}
+                                  className="object-cover w-full h-full"
                                 />
                               </div>
-                            </a>
-                            <Button asChild variant="outline" className="text-xs">
-                              <a href={issue.imageUrl} download target="_blank" rel="noopener noreferrer">
-                                Download Image
-                              </a>
-                            </Button>
+                            )}
+                            <p><strong>Language:</strong> {issue.language}</p>
+                            <p><strong>User Type:</strong> {issue.userType}</p>
+                            <p><strong>VPN:</strong> {issue.VPN || "N/A"}</p>
+                            <p><strong>Internet Source:</strong> {issue.internetSource}</p>
+                            <p><strong>Category:</strong> {issue.category}</p>
+                            <p><strong>Reason:</strong> {issue.reason || "N/A"}</p>
+                            <p className="text-sm text-muted-foreground">
+                              <strong>Date of Incident:</strong>{" "}
+                              {new Date(issue.dateOfIncident).toLocaleString("en-US", {
+                                timeZone: "America/New_York",
+                                dateStyle: "medium",
+                                timeStyle: "short",
+                              })}
+                            </p>
+                            <p className="mt-2">{issue.description}</p>
                           </div>
                         )}
-
-                        <div className="flex space-x-2 mt-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => onEditIssue(issue as MetaIssue)}
-                          >
-                            <Pencil className="h-4 w-4 text-muted-foreground" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => onDeleteIssue(issue._id as MetaIssue["_id"])}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
                       </div>
-                    </li>
-                  ))}
-                </ul>
-
-                {/* Pagination controls */}
-                {totalPages > 1 && (
-  <div className="flex justify-center items-center mt-4 space-x-2">
-    {/* ⏮ Jump to first */}
-    <button
-      onClick={() =>
-        setPageByCategory((prev) => ({ ...prev, [category]: 1 }))
-      }
-      disabled={page === 1}
-      className={`px-2 py-1 text-sm rounded border ${
-        page === 1
-          ? "bg-muted text-muted-foreground cursor-not-allowed"
-          : "bg-input hover:bg-accent/10"
-      }`}
-    >
-      ⏮
-    </button>
-
-    {/* ◀ Previous */}
-    <button
-      onClick={() =>
-        setPageByCategory((prev) => ({
-          ...prev,
-          [category]: Math.max(1, page - 1),
-        }))
-      }
-      disabled={page === 1}
-      className={`px-2 py-1 text-sm rounded border ${
-        page === 1
-          ? "bg-muted text-muted-foreground cursor-not-allowed"
-          : "bg-input hover:bg-accent/10"
-      }`}
-    >
-      ◀
-    </button>
-
-    {/* Dynamic pages with ellipses */}
-    {(() => {
-      const pages: (number | string)[] = [];
-      const showPages = 4;
-
-      if (totalPages <= showPages + 2) {
-        // 👇 Show all pages if there are few
-        for (let i = 1; i <= totalPages; i++) pages.push(i);
-      } else {
-        // 👇 Always show first page
-        pages.push(1);
-
-        // 👇 Add left ellipsis
-        if (page > showPages - 1) pages.push("...");
-
-        // 👇 Calculate visible window
-        const start = Math.max(2, page - 1);
-        const end = Math.min(totalPages - 1, start + showPages - 1);
-
-        for (let i = start; i <= end; i++) pages.push(i);
-
-        // 👇 Add right ellipsis
-        if (end < totalPages - 1) pages.push("...");
-
-        // 👇 Always show last page
-        pages.push(totalPages);
-      }
-
-      return pages.map((p, idx) =>
-        p === "..." ? (
-          <span key={`ellipsis-${idx}`} className="px-3 py-1 text-sm">
-            ...
-          </span>
-        ) : (
-          <button
-            key={p}
-            onClick={() =>
-              setPageByCategory((prev) => ({ ...prev, [category]: p as number }))
-            }
-            className={`px-3 py-1 text-sm rounded border ${
-              p === page
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground hover:bg-accent/10"
-            }`}
-          >
-            {p}
-          </button>
-        )
-      );
-    })()}
-
-    {/* ▶ Next */}
-    <button
-      onClick={() =>
-        setPageByCategory((prev) => ({
-          ...prev,
-          [category]: Math.min(totalPages, page + 1),
-        }))
-      }
-      disabled={page === totalPages}
-      className={`px-2 py-1 text-sm rounded border ${
-        page === totalPages
-          ? "bg-muted text-muted-foreground cursor-not-allowed"
-          : "bg-input hover:bg-accent/10"
-      }`}
-    >
-      ▶
-    </button>
-
-    {/* ⏭ Jump to last */}
-    <button
-      onClick={() =>
-        setPageByCategory((prev) => ({
-          ...prev,
-          [category]: totalPages,
-        }))
-      }
-      disabled={page === totalPages}
-      className={`px-2 py-1 text-sm rounded border ${
-        page === totalPages
-          ? "bg-muted text-muted-foreground cursor-not-allowed"
-          : "bg-input hover:bg-accent/10"
-      }`}
-    >
-      ⏭
-    </button>
-  </div>
-)}
-              </>
-            )}
-          </div>
-        );
-      })}
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })
+      )}
     </div>
   );
 }
