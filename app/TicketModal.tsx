@@ -7,11 +7,15 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import IssueForm from "./IssueForm";
+import type { ConvexIssue } from "./types";
 
 interface TicketModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: any, image: File | null) => Promise<void>;
+  onSubmit: (
+    data: Omit<ConvexIssue, "_id" | "_creationTime">,
+    image: File | null
+  ) => Promise<void>;
 }
 
 export default function TicketModal({ isOpen, onClose, onSubmit }: TicketModalProps) {

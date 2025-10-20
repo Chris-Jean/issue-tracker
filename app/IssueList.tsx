@@ -24,7 +24,6 @@ import { api } from "@/convex/_generated/api";
 
 interface IssueListProps {
   issues?: ConvexIssue[];
-  onSelectIssue: (issue: MetaIssue) => void;
   onEditIssue: (issue: MetaIssue) => void;
   onDeleteIssue: (id: MetaIssue["_id"]) => void;
   onRefresh: () => void;
@@ -34,7 +33,6 @@ const ITEMS_PER_PAGE = 5;
 
 export default function IssueList({
   issues,
-  onSelectIssue,
   onEditIssue,
   onDeleteIssue,
   onRefresh,
@@ -47,7 +45,6 @@ export default function IssueList({
   const [sortBy, setSortBy] = useState<string>("date");
   const [filterByCategory, setFilterByCategory] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [pageByMonth, setPageByMonth] = useState<Record<string, number>>({});
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
 
@@ -59,11 +56,11 @@ export default function IssueList({
 
     return issues.filter((issue) => {
       const date = new Date(issue.dateOfIncident);
-const start = startDate ? new Date(startDate + "T00:00:00") : null;
-const end = endDate ? new Date(endDate + "T23:59:59") : null;
+      const start = startDate ? new Date(startDate + "T00:00:00") : null;
+      const end = endDate ? new Date(endDate + "T23:59:59") : null;
 
-const afterStart = start ? date >= start : true;
-const beforeEnd = end ? date <= end : true;
+      const afterStart = start ? date >= start : true;
+      const beforeEnd = end ? date <= end : true;
 
       const matchCategory =
         filterByCategory === "All" || issue.category === filterByCategory;
@@ -162,17 +159,17 @@ const beforeEnd = end ? date <= end : true;
         </Select>
 
         <Input
-  type="date"
-  value={startDate}
-  onChange={(e) => setStartDate(e.target.value)}
-  className="[color-scheme:light] dark:[color-scheme:dark]"
-/>
-<Input
-  type="date"
-  value={endDate}
-  onChange={(e) => setEndDate(e.target.value)}
-  className="[color-scheme:light] dark:[color-scheme:dark]"
-/>
+          type="date"
+          value={startDate}
+          onChange={(e) => setStartDate(e.target.value)}
+          className="[color-scheme:light] dark:[color-scheme:dark]"
+        />
+        <Input
+          type="date"
+          value={endDate}
+          onChange={(e) => setEndDate(e.target.value)}
+          className="[color-scheme:light] dark:[color-scheme:dark]"
+        />
 
         <Button variant="destructive" onClick={handleDeleteAll}>
           🗑️ Delete All
@@ -186,12 +183,7 @@ const beforeEnd = end ? date <= end : true;
         <p className="text-muted-foreground">No tickets found for this range.</p>
       ) : (
         Object.entries(groupedByMonth).map(([month, monthIssues]) => {
-          const page = pageByMonth[month] ?? 1;
-          const totalPages = Math.ceil(monthIssues.length / ITEMS_PER_PAGE);
-          const paginated = sortedIssues(monthIssues).slice(
-            (page - 1) * ITEMS_PER_PAGE,
-            page * ITEMS_PER_PAGE
-          );
+          const paginated = sortedIssues(monthIssues).slice(0, ITEMS_PER_PAGE);
 
           return (
             <div key={month} className="mb-6 border rounded-md overflow-hidden">
@@ -212,15 +204,15 @@ const beforeEnd = end ? date <= end : true;
                     return (
                       <div
                         key={issue._id}
-                        className="border p-3 mb-3 rounded bg-background cursor-pointer transition-all"
+                        className="border p-3 mb-3 rounded bg-background cursor-pointer transition-all hover:bg-accent/40"
                         onClick={() => toggleCard(issue._id)}
                       >
-                        {/* Always visible header */}
                         <div className="flex justify-between items-center">
                           <div>
                             <h3 className="font-semibold">{issue.title}</h3>
                             <p className="text-sm text-muted-foreground">
-                              {new Date(issue.dateOfIncident).toLocaleDateString()} | Service #: {issue.agent}
+                              {new Date(issue.dateOfIncident).toLocaleDateString()} | Service #:{" "}
+                              {issue.agent}
                             </p>
                           </div>
                           <div className="flex items-center space-x-1">
@@ -258,7 +250,6 @@ const beforeEnd = end ? date <= end : true;
                           </div>
                         </div>
 
-                        {/* Expanded details */}
                         {isExpanded && (
                           <div className="mt-3 space-y-2">
                             {issue.imageUrl && (

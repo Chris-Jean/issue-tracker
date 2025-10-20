@@ -10,10 +10,9 @@ import {
   useQuery,
 } from "convex/react";
 import { useState, useMemo } from "react";
-import IssueDetail from "./IssueDetail";
 import IssueList from "./IssueList";
 import TicketModal from "./TicketModal";
-import type { ConvexIssue, MetaIssue } from "./types";
+import type { ConvexIssue } from "./types";
 import { Id } from "@/convex/_generated/dataModel";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import { Button } from "@/components/ui/button";
@@ -22,15 +21,13 @@ function Home() {
   const { toast } = useToast();
   const issues = useQuery(api.issues.getIssues) as ConvexIssue[] | undefined;
   const createIssue = useMutation(api.issues.createIssue);
-  const updateIssue = useMutation(api.issues.updateIssue);
   const deleteIssue = useMutation(api.issues.deleteIssue);
   const generateUploadUrl = useMutation(api.issues.generateUploadUrl);
 
   const [refreshKey, setRefreshKey] = useState(0);
-  const [selectedIssue, setSelectedIssue] = useState<MetaIssue | null>(null);
   const [isModalOpen, setModalOpen] = useState(false);
 
-  // 📊 Analytics Data
+  // 📊 Analytics
   const trends = useMemo(() => {
     if (!issues || issues.length === 0) return null;
     const countTop = (key: keyof ConvexIssue, topN = 5) => {
@@ -44,7 +41,6 @@ function Home() {
         .sort((a, b) => b.count - a.count)
         .slice(0, topN);
     };
-
     return {
       topClients: countTop("userType"),
       topReasons: countTop("reason"),
@@ -52,7 +48,7 @@ function Home() {
     };
   }, [issues]);
 
-  // 🧠 Handle create issue (used by modal form)
+  // 🧠 Create Issue (Fixes Image Upload)
   const handleAddIssue = async (
     newIssue: Omit<ConvexIssue, "_id" | "_creationTime">,
     selectedImage: File | null
@@ -63,21 +59,24 @@ function Home() {
       // Upload image if selected
       if (selectedImage) {
         const postUrl = await generateUploadUrl();
-        const result = await fetch(postUrl, {
+        const uploadResponse = await fetch(postUrl, {
           method: "POST",
           headers: { "Content-Type": selectedImage.type },
           body: selectedImage,
         });
 
-        if (!result.ok) throw new Error("Image upload failed.");
+        if (!uploadResponse.ok) throw new Error("Image upload failed.");
 
-        const { storageId } = await result.json();
+        const { storageId } = await uploadResponse.json();
         imageId = storageId as Id<"_storage">;
       }
 
-      const issueData = imageId
-        ? { ...newIssue, image: imageId }
-        : { ...newIssue };
+      // ✅ Make sure archived = false on creation
+      const issueData = {
+        ...newIssue,
+        image: imageId,
+        archived: false,
+      };
 
       await createIssue(issueData);
       toast({ title: "Success", description: "Ticket created successfully!" });
@@ -88,27 +87,15 @@ function Home() {
     }
   };
 
-  const handleUpdateIssue = async (updatedIssue: MetaIssue) => {
-    try {
-      await updateIssue(updatedIssue);
-      setSelectedIssue(updatedIssue);
-    } catch {
-      toast({ title: "Error", description: "Failed to update issue." });
-    }
-  };
-
-  const handleDeleteIssue = async (id: MetaIssue["_id"]) => {
+  const handleDeleteIssue = async (id: string) => {
     try {
       await deleteIssue({ id });
-      setSelectedIssue(null);
       toast({ title: "Success", description: "Issue deleted successfully" });
       setRefreshKey((prev) => prev + 1);
     } catch {
       toast({ title: "Error", description: "Failed to delete issue." });
     }
   };
-
-  const handleCloseDetail = () => setSelectedIssue(null);
 
   return (
     <main className="container mx-auto p-4 relative">
@@ -126,16 +113,15 @@ function Home() {
         </div>
       </div>
 
-      {/* 🧱 Main Layout */}
+      {/* 🧱 Layout */}
       <div className="flex flex-col lg:flex-row gap-6 mt-24">
-        {/* Left: Issues */}
+        {/* Left: Tickets */}
         <div className="flex-1">
           {issues && (
             <IssueList
               key={refreshKey}
               issues={issues}
-              onSelectIssue={setSelectedIssue}
-              onEditIssue={setSelectedIssue}
+              onEditIssue={() => {}}
               onDeleteIssue={handleDeleteIssue}
               onRefresh={() => setRefreshKey((prev) => prev + 1)}
             />
@@ -183,11 +169,11 @@ function Home() {
         )}
       </div>
 
-      {/* 🪟 Modal for Creating New Ticket */}
+      {/* 🪟 Modal (Image Upload Fixed) */}
       <TicketModal
         isOpen={isModalOpen}
         onClose={() => setModalOpen(false)}
-        onSubmit={handleAddIssue} // ✅ FIXED missing function
+        onSubmit={handleAddIssue}
       />
 
       <Toaster />
