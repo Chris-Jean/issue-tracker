@@ -87,15 +87,16 @@ function Home() {
     }
   };
 
-  const handleDeleteIssue = async (id: string) => {
-    try {
-      await deleteIssue({ id });
-      toast({ title: "Success", description: "Issue deleted successfully" });
-      setRefreshKey((prev) => prev + 1);
-    } catch {
-      toast({ title: "Error", description: "Failed to delete issue." });
-    }
-  };
+const handleDeleteIssue = async (id: Id<"issues">) => {
+  try {
+    await deleteIssue({ id });
+    toast({ title: "Success", description: "Issue deleted successfully" });
+    setRefreshKey((prev) => prev + 1);
+  } catch {
+    toast({ title: "Error", description: "Failed to delete issue." });
+  }
+};
+
 
   return (
     <main className="container mx-auto p-4 relative">

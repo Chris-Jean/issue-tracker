@@ -21,11 +21,14 @@ import { useState, useMemo } from "react";
 import type { ConvexIssue, MetaIssue } from "./types";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel"; 
+import { exportToJsonExcel } from "@/helpers/fileHelpers";
+import { Download } from "lucide-react";
 
 interface IssueListProps {
   issues?: ConvexIssue[];
   onEditIssue: (issue: MetaIssue) => void;
-  onDeleteIssue: (id: MetaIssue["_id"]) => void;
+  onDeleteIssue: (id: Id<"issues">) => void;
   onRefresh: () => void;
 }
 
@@ -104,8 +107,10 @@ export default function IssueList({
     setExpandedCards((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const handleArchive = async (id: string) => {
+  const handleArchive = async (id: Id<"issues"> | undefined) => {
+    if (!id) return; // ✅ Prevent undefined call
     if (!confirm("Archive this issue?")) return;
+  
     try {
       await archiveIssue({ id });
       onRefresh();
@@ -171,9 +176,43 @@ export default function IssueList({
           className="[color-scheme:light] dark:[color-scheme:dark]"
         />
 
-        <Button variant="destructive" onClick={handleDeleteAll}>
-          🗑️ Delete All
-        </Button>
+<div className="flex flex-wrap gap-3 mb-6">
+  {/* Existing search, filters, etc. */}
+
+  <Button
+    variant="outline"
+    onClick={() => {
+      if (!filteredIssues.length) {
+        alert("No tickets available to export.");
+        return;
+      }
+      const exportData = filteredIssues.map((i) => ({
+       "Title": i.title,
+      "Service #": i.agent,
+      "Language": i.language,
+      "Client Type": i.userType,
+      "Internet Source": i.internetSource,
+      "Category": i.category,
+      "Reason": i.reason || "N/A",
+      "Date of Incident": new Date(i.dateOfIncident).toLocaleString("en-US", {
+        timeZone: "America/New_York",
+        dateStyle: "medium",
+        timeStyle: "short",
+      }),
+      "Description": i.description,
+    }));
+      exportToJsonExcel(exportData, "Active_Tickets");
+    }}
+    className="flex items-center gap-2"
+  >
+    <Download className="h-4 w-4" /> Export Excel
+  </Button>
+
+  <Button variant="destructive" onClick={handleDeleteAll}>
+    🗑️ Delete All
+  </Button>
+</div>
+
       </div>
 
       {isLoading && <p className="text-muted-foreground">Loading tickets…</p>}
@@ -200,12 +239,13 @@ export default function IssueList({
               {!collapsedMonths[month] && (
                 <div className="p-3 bg-card">
                   {paginated.map((issue) => {
-                    const isExpanded = expandedCards[issue._id];
+                    const isExpanded = expandedCards?.[issue._id as string] ?? false;
+
                     return (
                       <div
                         key={issue._id}
                         className="border p-3 mb-3 rounded bg-background cursor-pointer transition-all hover:bg-accent/40"
-                        onClick={() => toggleCard(issue._id)}
+                        onClick={() => toggleCard(issue._id as unknown as string)}
                       >
                         <div className="flex justify-between items-center">
                           <div>
@@ -241,7 +281,7 @@ export default function IssueList({
                               size="icon"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                onDeleteIssue(issue._id);
+                                if (issue._id) onDeleteIssue(issue._id);
                               }}
                             >
                               <Trash2 className="h-4 w-4 text-destructive" />
