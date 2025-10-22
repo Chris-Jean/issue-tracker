@@ -23,6 +23,7 @@ export const createIssue = mutation({
     reason: v.optional(v.string()),
     dateOfIncident: v.string(),
     image: v.optional(v.id("_storage")),
+    archived: v.optional(v.boolean()), 
   },
   handler: async (ctx, args) => {
     try {
