@@ -15,15 +15,15 @@ import {
   Pencil,
   Trash2,
   Archive,
+  Download,
 } from "lucide-react";
 import Image from "next/image";
 import { useState, useMemo } from "react";
 import type { ConvexIssue, MetaIssue } from "./types";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Id } from "@/convex/_generated/dataModel"; 
+import { Id } from "@/convex/_generated/dataModel";
 import { exportToJsonExcel } from "@/helpers/fileHelpers";
-import { Download } from "lucide-react";
 
 interface IssueListProps {
   issues?: ConvexIssue[];
@@ -50,6 +50,13 @@ export default function IssueList({
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
+
+  // 🧭 Pagination state (per month)
+  const [currentPageByMonth, setCurrentPageByMonth] = useState<Record<string, number>>({});
+
+  const getCurrentPage = (month: string) => currentPageByMonth[month] || 1;
+  const setPage = (month: string, page: number) =>
+    setCurrentPageByMonth((prev) => ({ ...prev, [month]: page }));
 
   const isLoading = typeof issues === "undefined";
 
@@ -85,7 +92,10 @@ export default function IssueList({
   const groupedByMonth = useMemo(() => {
     return filteredIssues.reduce((acc, issue) => {
       const date = issue.dateOfIncident ? new Date(issue.dateOfIncident) : new Date();
-      const monthKey = date.toLocaleString("default", { month: "long", year: "numeric" });
+      const monthKey = date.toLocaleString("default", {
+        month: "long",
+        year: "numeric",
+      });
       if (!acc[monthKey]) acc[monthKey] = [];
       acc[monthKey].push(issue);
       return acc;
@@ -108,9 +118,9 @@ export default function IssueList({
   };
 
   const handleArchive = async (id: Id<"issues"> | undefined) => {
-    if (!id) return; // ✅ Prevent undefined call
+    if (!id) return;
     if (!confirm("Archive this issue?")) return;
-  
+
     try {
       await archiveIssue({ id });
       onRefresh();
@@ -176,43 +186,38 @@ export default function IssueList({
           className="[color-scheme:light] dark:[color-scheme:dark]"
         />
 
-<div className="flex flex-wrap gap-3 mb-6">
-  {/* Existing search, filters, etc. */}
+        <Button
+          variant="outline"
+          onClick={() => {
+            if (!filteredIssues.length) {
+              alert("No tickets available to export.");
+              return;
+            }
+            const exportData = filteredIssues.map((i) => ({
+              "Title": i.title,
+              "Service #": i.agent,
+              "Language": i.language,
+              "Client Type": i.userType,
+              "Internet Source": i.internetSource,
+              "Category": i.category,
+              "Reason": i.reason || "N/A",
+              "Date of Incident": new Date(i.dateOfIncident).toLocaleString("en-US", {
+                timeZone: "America/New_York",
+                dateStyle: "medium",
+                timeStyle: "short",
+              }),
+              "Description": i.description,
+            }));
+            exportToJsonExcel(exportData, "Active_Tickets");
+          }}
+          className="flex items-center gap-2"
+        >
+          <Download className="h-4 w-4" /> Export Excel
+        </Button>
 
-  <Button
-    variant="outline"
-    onClick={() => {
-      if (!filteredIssues.length) {
-        alert("No tickets available to export.");
-        return;
-      }
-      const exportData = filteredIssues.map((i) => ({
-       "Title": i.title,
-      "Service #": i.agent,
-      "Language": i.language,
-      "Client Type": i.userType,
-      "Internet Source": i.internetSource,
-      "Category": i.category,
-      "Reason": i.reason || "N/A",
-      "Date of Incident": new Date(i.dateOfIncident).toLocaleString("en-US", {
-        timeZone: "America/New_York",
-        dateStyle: "medium",
-        timeStyle: "short",
-      }),
-      "Description": i.description,
-    }));
-      exportToJsonExcel(exportData, "Active_Tickets");
-    }}
-    className="flex items-center gap-2"
-  >
-    <Download className="h-4 w-4" /> Export Excel
-  </Button>
-
-  <Button variant="destructive" onClick={handleDeleteAll}>
-    🗑️ Delete All
-  </Button>
-</div>
-
+        <Button variant="destructive" onClick={handleDeleteAll}>
+          🗑️ Delete All
+        </Button>
       </div>
 
       {isLoading && <p className="text-muted-foreground">Loading tickets…</p>}
@@ -222,7 +227,13 @@ export default function IssueList({
         <p className="text-muted-foreground">No tickets found for this range.</p>
       ) : (
         Object.entries(groupedByMonth).map(([month, monthIssues]) => {
-          const paginated = sortedIssues(monthIssues).slice(0, ITEMS_PER_PAGE);
+          const totalPages = Math.ceil(monthIssues.length / ITEMS_PER_PAGE);
+          const currentPage = getCurrentPage(month);
+          const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+          const paginated = sortedIssues(monthIssues).slice(
+            startIndex,
+            startIndex + ITEMS_PER_PAGE
+          );
 
           return (
             <div key={month} className="mb-6 border rounded-md overflow-hidden">
@@ -323,6 +334,53 @@ export default function IssueList({
                       </div>
                     );
                   })}
+
+                  {/* 🧭 Pagination Controls */}
+                  {totalPages > 1 && (
+                    <div className="flex justify-center items-center gap-2 mt-4 flex-wrap">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPage(month, 1)}
+                        disabled={currentPage === 1}
+                        className="min-w-[70px]"
+                      >
+                        « First
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPage(month, Math.max(currentPage - 1, 1))}
+                        disabled={currentPage === 1}
+                      >
+                        ‹ Prev
+                      </Button>
+
+                      <span className="text-sm text-muted-foreground px-2">
+                        Page {currentPage} of {totalPages}
+                      </span>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPage(month, Math.min(currentPage + 1, totalPages))}
+                        disabled={currentPage === totalPages}
+                      >
+                        Next ›
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPage(month, totalPages)}
+                        disabled={currentPage === totalPages}
+                        className="min-w-[70px]"
+                      >
+                        Last »
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

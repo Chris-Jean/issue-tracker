@@ -11,7 +11,7 @@ export const generateUploadUrl = mutation({
 
 // Create
 export const createIssue = mutation({
-  args: {
+  args: v.object({
     title: v.string(),
     agent: v.string(),
     language: v.string(),
@@ -23,17 +23,17 @@ export const createIssue = mutation({
     reason: v.optional(v.string()),
     dateOfIncident: v.string(),
     image: v.optional(v.id("_storage")),
-    archived: v.optional(v.boolean()), 
-  },
+    archived: v.optional(v.boolean()),
+  }),
   handler: async (ctx, args) => {
     try {
       const { image, ...issueData } = args;
       const issue = image ? { ...issueData, image } : issueData;
 
-      // ✅ Force archived = false for all new issues
+      // ✅ Ensure all new issues start unarchived
       const issueId = await ctx.db.insert("issues", {
         ...issue,
-        archived: false,
+        archived: args.archived ?? false,
       });
 
       return issueId;

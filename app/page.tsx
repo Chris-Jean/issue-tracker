@@ -75,7 +75,6 @@ function Home() {
       const issueData = {
         ...newIssue,
         image: imageId,
-        archived: false,
       };
 
       await createIssue(issueData);
