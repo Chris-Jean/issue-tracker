@@ -18,7 +18,7 @@ import {
 } from "./data/issueOptions";
 
 interface IssueFormProps {
-  onSubmit: (issue: Issue, previewUrl: File | null) => void;
+  onSubmit: (issue: Issue, previewUrl: File | null, resetForm: () => void) => void;
   initialIssue?: Issue;
   onCancel: () => void;
 }
@@ -106,13 +106,18 @@ export default function IssueForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(issue, selectedImage);
-    setIssue(emptyIssue);
-    setSelectedImage(null);
-    setPreviewUrl(null);
-    const fileInput = document.getElementById("imageUpload") as HTMLInputElement;
-    if (fileInput) fileInput.value = "";
+  
+    // 🧠 Submit form data, but let the parent decide when to clear it
+    onSubmit(issue, selectedImage, () => {
+      // ✅ Reset only after successful submission
+      setIssue(emptyIssue);
+      setSelectedImage(null);
+      setPreviewUrl(null);
+      const fileInput = document.getElementById("imageUpload") as HTMLInputElement;
+      if (fileInput) fileInput.value = "";
+    });
   };
+  
 
   const handleChange = (
     e: React.ChangeEvent<

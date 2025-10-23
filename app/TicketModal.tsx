@@ -27,13 +27,21 @@ export default function TicketModal({ isOpen, onClose, onSubmit }: TicketModalPr
         </DialogHeader>
 
         <div className="space-y-4">
-          <IssueForm
-            onSubmit={async (data, image) => {
-              await onSubmit(data, image);
-              onClose(); // ✅ Close modal after submit
-            }}
-            onCancel={onClose}
-          />
+        <IssueForm
+                    onSubmit={async (data, image, resetForm) => {
+                    try {
+                    await onSubmit(data, image);
+                    resetForm(); 
+                    onClose();   
+                     } catch (err) {
+                    console.error("Submit failed:", err);
+                         }
+                         }}
+                            onCancel={() => {
+                            onClose();
+                        }}
+                        />
+
         </div>
       </DialogContent>
     </Dialog>

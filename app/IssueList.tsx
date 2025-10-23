@@ -186,34 +186,42 @@ export default function IssueList({
           className="[color-scheme:light] dark:[color-scheme:dark]"
         />
 
-        <Button
-          variant="outline"
-          onClick={() => {
-            if (!filteredIssues.length) {
-              alert("No tickets available to export.");
-              return;
-            }
-            const exportData = filteredIssues.map((i) => ({
-              "Title": i.title,
-              "Service #": i.agent,
-              "Language": i.language,
-              "Client Type": i.userType,
-              "Internet Source": i.internetSource,
-              "Category": i.category,
-              "Reason": i.reason || "N/A",
-              "Date of Incident": new Date(i.dateOfIncident).toLocaleString("en-US", {
-                timeZone: "America/New_York",
-                dateStyle: "medium",
-                timeStyle: "short",
-              }),
-              "Description": i.description,
-            }));
-            exportToJsonExcel(exportData, "Active_Tickets");
-          }}
-          className="flex items-center gap-2"
-        >
-          <Download className="h-4 w-4" /> Export Excel
-        </Button>
+<Button
+  variant="outline"
+  onClick={() => {
+    if (!filteredIssues.length) {
+      alert("No tickets available to export.");
+      return;
+    }
+    const exportData = filteredIssues.map((i) => {
+      const dateObj = new Date(i.dateOfIncident);
+      return {
+        "Title": i.title,
+        "Service #": i.agent,
+        "Language": i.language,
+        "Client Type": i.userType,
+        "Project Name": i.internetSource,
+        "Category": i.category,
+        "Reason": i.reason || "N/A",
+        "Date": dateObj.toLocaleDateString("en-US", {
+          timeZone: "America/New_York",
+          dateStyle: "medium",
+        }),
+        "Time": dateObj.toLocaleTimeString("en-US", {
+          timeZone: "America/New_York",
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        "Description": i.description,
+      };
+    });
+    exportToJsonExcel(exportData, "Active_Tickets");
+  }}
+  className="flex items-center gap-2"
+>
+  <Download className="h-4 w-4" /> Export Excel
+</Button>
+
 
         <Button variant="destructive" onClick={handleDeleteAll}>
           🗑️ Delete All
@@ -301,36 +309,43 @@ export default function IssueList({
                           </div>
                         </div>
 
-                        {isExpanded && (
-                          <div className="mt-3 space-y-2">
-                            {issue.imageUrl && (
-                              <div className="w-32 h-32 border rounded overflow-hidden">
-                                <Image
-                                  src={issue.imageUrl}
-                                  alt={issue.title}
-                                  width={128}
-                                  height={128}
-                                  className="object-cover w-full h-full"
-                                />
-                              </div>
-                            )}
-                            <p><strong>Language:</strong> {issue.language}</p>
-                            <p><strong>User Type:</strong> {issue.userType}</p>
-                            <p><strong>VPN:</strong> {issue.VPN || "N/A"}</p>
-                            <p><strong>Internet Source:</strong> {issue.internetSource}</p>
-                            <p><strong>Category:</strong> {issue.category}</p>
-                            <p><strong>Reason:</strong> {issue.reason || "N/A"}</p>
-                            <p className="text-sm text-muted-foreground">
-                              <strong>Date of Incident:</strong>{" "}
-                              {new Date(issue.dateOfIncident).toLocaleString("en-US", {
-                                timeZone: "America/New_York",
-                                dateStyle: "medium",
-                                timeStyle: "short",
-                              })}
-                            </p>
-                            <p className="mt-2">{issue.description}</p>
-                          </div>
-                        )}
+                        {/* Expanded details */}
+{isExpanded && (
+  <div className="mt-3 space-y-2">
+    {issue.imageUrl && (
+      <div className="w-32 h-32 border rounded overflow-hidden">
+        <Image
+          src={issue.imageUrl}
+          alt={issue.title}
+          width={128}
+          height={128}
+          className="object-cover w-full h-full"
+        />
+      </div>
+    )}
+    <p><strong>Caller ID:</strong> {issue.title}</p>
+    <p><strong>Service #:</strong> {issue.agent}</p>
+    <p><strong>Language:</strong> {issue.language}</p>
+    <p><strong>Client Type:</strong> {issue.userType}</p>
+    <p><strong>Project Name:</strong> {issue.internetSource}</p>
+    <p><strong>Category:</strong> {issue.category}</p>
+    <p><strong>Reason:</strong> {issue.reason || "N/A"}</p>
+    <p className="text-sm text-muted-foreground">
+      <strong>Date of Incident:</strong>{" "}
+      {new Date(issue.dateOfIncident).toLocaleDateString("en-US", {
+        timeZone: "America/New_York",
+        dateStyle: "medium",
+      })}{" "}
+      <strong>Time:</strong>{" "}
+      {new Date(issue.dateOfIncident).toLocaleTimeString("en-US", {
+        timeZone: "America/New_York",
+        timeStyle: "short",
+      })}
+    </p>
+    <p className="mt-2"><strong>Description:</strong> {issue.description}</p>
+  </div>
+)}
+
                       </div>
                     );
                   })}
