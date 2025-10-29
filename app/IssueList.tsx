@@ -50,14 +50,14 @@ export default function IssueList({
   const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({});
   const [collapsedMonths, setCollapsedMonths] = useState<Record<string, boolean>>({});
   const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
-  const [sortBy, setSortBy] = useState<string>("date");
+ // const [sortBy, setSortBy] = useState<string>("date");
   const [filterByCategory, setFilterByCategory] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const [page, setPage] = useState(1);
 
-  const isLoading = typeof issues === "undefined";
+  //const isLoading = typeof issues === "undefined";
 
   // 🔹 Filter & Sort
   const filteredIssues = useMemo(() => {
@@ -95,10 +95,7 @@ export default function IssueList({
 
   // 🔹 Pagination
   const totalPages = Math.ceil(filteredIssues.length / ITEMS_PER_PAGE);
-  const paginated = filteredIssues.slice(
-    (page - 1) * ITEMS_PER_PAGE,
-    page * ITEMS_PER_PAGE
-  );
+ 
 
   // 🔹 Group by category → month
   const groupedByCategoryAndMonth = useMemo(() => {
