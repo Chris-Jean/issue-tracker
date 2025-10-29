@@ -1,48 +1,48 @@
 "use client";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import IssueForm from "./IssueForm";
 import type { ConvexIssue } from "./types";
+import { useState, useEffect } from "react";
 
 interface TicketModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (
-    data: Omit<ConvexIssue, "_id" | "_creationTime">,
-    image: File | null
-  ) => Promise<void>;
+    issue: Omit<ConvexIssue, "_id" | "_creationTime">,
+    selectedImage: File | null
+  ) => void;
+  initialIssue?: ConvexIssue;
 }
 
-export default function TicketModal({ isOpen, onClose, onSubmit }: TicketModalProps) {
+export default function TicketModal({
+  isOpen,
+  onClose,
+  onSubmit,
+  initialIssue,
+}: TicketModalProps) {
+  const [savedDraft, setSavedDraft] = useState<Omit<ConvexIssue, "_id" | "_creationTime"> | null>(
+    null
+  );
+
+  useEffect(() => {
+    if (!isOpen && initialIssue) setSavedDraft(initialIssue);
+  }, [isOpen, initialIssue]);
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto p-6">
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-2xl overflow-y-auto max-h-[90vh]">
         <DialogHeader>
-          <DialogTitle>Create New Ticket</DialogTitle>
+          <DialogTitle>
+            {initialIssue ? "Edit Ticket" : "New Ticket"}
+          </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
         <IssueForm
-                    onSubmit={async (data, image, resetForm) => {
-                    try {
-                    await onSubmit(data, image);
-                    resetForm(); 
-                    onClose();   
-                     } catch (err) {
-                    console.error("Submit failed:", err);
-                         }
-                         }}
-                            onCancel={() => {
-                            onClose();
-                        }}
-                        />
-
-        </div>
+          onSubmit={onSubmit}
+          onCancel={onClose}
+          initialIssue={initialIssue || savedDraft || undefined}
+        />
       </DialogContent>
     </Dialog>
   );

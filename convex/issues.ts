@@ -96,6 +96,7 @@ export const updateIssue = mutation({
     category: v.optional(v.string()),
     reason: v.optional( v.string()),
     dateOfIncident: v.optional(v.string()),
+    image: v.optional(v.id("_storage")),
     _creationTime: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
