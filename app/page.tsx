@@ -74,7 +74,7 @@ function Home() {
       if (editingIssue) {
         // ✏️ UPDATE EXISTING ISSUE
         await updateIssue({
-          _id: editingIssue._id,
+          _id: editingIssue._id as Id<"issues">,
           title: issue.title,
           agent: issue.agent,
           language: issue.language,
