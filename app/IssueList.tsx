@@ -22,7 +22,7 @@ import {
   ChevronRight as PageNext,
 } from "lucide-react";
 import Image from "next/image";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import type { ConvexIssue, MetaIssue } from "./types";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -36,7 +36,7 @@ interface IssueListProps {
   onRefresh: () => void;
 }
 
-const ITEMS_PER_PAGE = 5;
+const ITEMS_PER_PAGE = 7;
 
 export default function IssueList({
   issues,
@@ -93,34 +93,52 @@ export default function IssueList({
       );
   }, [issues, searchQuery, filterByCategory, startDate, endDate]);
 
-  // 🔹 Pagination
-  const totalPages = Math.ceil(filteredIssues.length / ITEMS_PER_PAGE);
- 
-
   // 🔹 Group by category → month
-  const groupedByCategoryAndMonth = useMemo(() => {
-    const grouped = filteredIssues.reduce((acc, issue) => {
-      const catKey = issue.category || "Uncategorized";
-      const date = issue.dateOfIncident ? new Date(issue.dateOfIncident) : new Date();
-      const monthKey = date.toLocaleString("default", { month: "long", year: "numeric" });
+const totalPages = Math.ceil(filteredIssues.length / ITEMS_PER_PAGE);
+const paginatedIssues = filteredIssues.slice(
+  (page - 1) * ITEMS_PER_PAGE,
+  page * ITEMS_PER_PAGE
+);
 
-      if (!acc[catKey]) acc[catKey] = {};
-      if (!acc[catKey][monthKey]) acc[catKey][monthKey] = [];
-      acc[catKey][monthKey].push(issue);
-      return acc;
-    }, {} as Record<string, Record<string, ConvexIssue[]>>);
+// 🔹 Group paginated issues by category → month
+const categoryTotals = useMemo(() => {
+  const totals: Record<string, number> = {};
+  filteredIssues.forEach((issue) => {
+    const cat = issue.category || "Uncategorized";
+    totals[cat] = (totals[cat] || 0) + 1;
+  });
+  return totals;
+}, [filteredIssues]);
 
-    // Sort months newest → oldest inside each category
-    for (const category in grouped) {
-      grouped[category] = Object.fromEntries(
-        Object.entries(grouped[category]).sort(
-          (a, b) =>
-            new Date(b[0]).getTime() - new Date(a[0]).getTime()
-        )
-      );
-    }
-    return grouped;
-  }, [filteredIssues]);
+// 🧩 Group paginated issues by category → month
+const groupedByCategoryAndMonth = useMemo(() => {
+  const grouped = paginatedIssues.reduce((acc, issue) => {
+    const catKey = issue.category || "Uncategorized";
+    const date = issue.dateOfIncident ? new Date(issue.dateOfIncident) : new Date();
+    const monthKey = date.toLocaleString("default", { month: "long", year: "numeric" });
+
+    if (!acc[catKey]) acc[catKey] = {};
+    if (!acc[catKey][monthKey]) acc[catKey][monthKey] = [];
+    acc[catKey][monthKey].push(issue);
+    return acc;
+  }, {} as Record<string, Record<string, ConvexIssue[]>>);
+
+  return grouped;
+}, [paginatedIssues]);
+
+useEffect(() => {
+  if (!issues?.length) return;
+
+  const collapsedInit: Record<string, boolean> = {};
+  Object.entries(groupedByCategoryAndMonth).forEach(([category, months]) => {
+    Object.keys(months).forEach((month) => {
+      collapsedInit[`${category}-${month}`] = true;
+    });
+  });
+
+  // ✅ Only set if it’s not already initialized
+  setCollapsedMonths((prev) => (Object.keys(prev).length ? prev : collapsedInit));
+}, [issues]);
 
   const toggleCategory = (category: string) =>
     setCollapsedCategories((prev) => ({ ...prev, [category]: !prev[category] }));
@@ -215,8 +233,8 @@ export default function IssueList({
             onClick={() => toggleCategory(category)}
           >
             <h2 className="font-semibold text-lg">
-              {category} ({Object.values(months).flat().length})
-            </h2>
+            {category} ({categoryTotals[category] || 0})
+          </h2>
             {collapsedCategories[category] ? <ChevronRight /> : <ChevronDown />}
           </div>
 
@@ -231,6 +249,7 @@ export default function IssueList({
                     <h3 className="font-semibold text-base">
                       {month} ({issues.length})
                     </h3>
+
                     {collapsedMonths[`${category}-${month}`] ? (
                       <ChevronRight />
                     ) : (
