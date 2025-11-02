@@ -11,11 +11,13 @@ import {
 } from "convex/react";
 import { useState } from "react";
 import IssueDetail from "./IssueDetail";
-import IssueForm from "./IssueForm";
+import IssueFormModal from "./IssueFormModal";
 import IssueList from "./IssueList";
 import type { ConvexIssue, MetaIssue } from "./types";
 import { Id } from "@/convex/_generated/dataModel"; // ✅ Import Convex ID type
 import ThemeToggle from "@/components/ui/ThemeToggle";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 
 
 function Home() {
@@ -28,6 +30,7 @@ function Home() {
   const [refreshKey, setRefreshKey] = useState(0);
 
   const [selectedIssue, setSelectedIssue] = useState<MetaIssue | null>(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const handleAddIssue = async (
     newIssue: Omit<ConvexIssue, "_id" | "_creationTime">,
@@ -63,6 +66,7 @@ function Home() {
 
       await createIssue(newIssueWithId);
       toast({ title: "Success", description: "Issue created successfully" });
+      setIsCreateModalOpen(false);
     } catch (error) {
       console.error("Error adding issue:", error);
       toast({ title: "Error", description: "Failed to create issue. Try again." });
@@ -101,33 +105,44 @@ function Home() {
         <ThemeToggle />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <h2 className="text-xl font-semibold mb-2">Issues</h2>
-          {issues && (
-            <IssueList
-              key={refreshKey}
-              issues={issues}
-              onSelectIssue={setSelectedIssue}
-              onEditIssue={setSelectedIssue}
-              onDeleteIssue={handleDeleteIssue}
-              onRefresh={() => setRefreshKey((prev) => prev + 1)}
-            />
-          )}
-        </div>
-
-        <div>
-          {selectedIssue ? (
-            <IssueDetail
-              issue={selectedIssue}
-              onClose={handleCloseDetail}
-              onUpdate={handleUpdateIssue}
-            />
-          ) : (
-            <IssueForm onSubmit={handleAddIssue} onCancel={handleCloseDetail} />
-          )}
-        </div>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-semibold">Issues</h2>
+        <Button
+          onClick={() => setIsCreateModalOpen(true)}
+          className="flex items-center gap-2"
+        >
+          <Plus className="w-4 h-4" />
+          Create Issue
+        </Button>
       </div>
+
+      {issues && (
+        <IssueList
+          key={refreshKey}
+          issues={issues}
+          onSelectIssue={setSelectedIssue}
+          onEditIssue={setSelectedIssue}
+          onDeleteIssue={handleDeleteIssue}
+          onRefresh={() => setRefreshKey((prev) => prev + 1)}
+        />
+      )}
+
+      {/* Create Issue Modal */}
+      <IssueFormModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSubmit={handleAddIssue}
+        title="Create New Issue"
+      />
+
+      {/* Issue Detail Modal */}
+      {selectedIssue && (
+        <IssueDetail
+          issue={selectedIssue}
+          onClose={handleCloseDetail}
+          onUpdate={handleUpdateIssue}
+        />
+      )}
 
       <Toaster />
     </main>

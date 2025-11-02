@@ -14,88 +14,99 @@ body {
 
 @layer base {
   /* light mode */
-:root {
-  --background: 0 0% 98%;
-  --foreground: 0 0% 10%;
+  :root {
+    --background: 0 0% 98%;
+    --foreground: 0 0% 10%;
 
-  --card: 0 0% 100%;
-  --card-foreground: 0 0% 10%;
-  --input: 0 0% 96%;
-  --border: 210 15% 88%;
-  --ring: 210 100% 50%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 10%;
+    --input: 0 0% 96%;
+    --border: 210 15% 88%;
+    --ring: 210 100% 50%;
 
-  --primary: 180 65% 50%;
-  --primary-foreground: 0 0% 100%;
+    --primary: 180 65% 50%;
+    --primary-foreground: 0 0% 100%;
 
-  --secondary: 180 25% 88%;
-  --secondary-foreground: 0 0% 10%;
+    --secondary: 180 25% 88%;
+    --secondary-foreground: 0 0% 10%;
 
-  --muted: 210 16% 94%;
-  --muted-foreground: 0 0% 45%;
+    --muted: 210 16% 94%;
+    --muted-foreground: 0 0% 45%;
 
-  --accent: 350 85% 60%;
-  --accent-foreground: 0 0% 100%;
+    --accent: 350 85% 60%;
+    --accent-foreground: 0 0% 100%;
 
-  --destructive: 0 70% 60%;
-  --destructive-foreground: 0 0% 100%;
+    --destructive: 0 70% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-  --border: 210 16% 82%;
-  --input: 210 16% 92%;
-  --ring: 210 100% 50%;
+    --border: 210 16% 82%;
+    --input: 210 16% 92%;
+    --ring: 210 100% 50%;
 
-  /* Chart colors */
-  --chart-1: 200 90% 55%;
-  --chart-2: 280 80% 60%;
-  --chart-3: 45 90% 60%;
-  --chart-4: 140 75% 50%;
-  --chart-5: 15 85% 60%;
+    /* Chart colors */
+    --chart-1: 200 90% 55%;
+    --chart-2: 280 80% 60%;
+    --chart-3: 45 90% 60%;
+    --chart-4: 140 75% 50%;
+    --chart-5: 15 85% 60%;
+  }
+
+  /* dark mode */
+  .dark {
+    --background: 180 10% 6%;
+    --foreground: 0 0% 98%;
+
+    --card: 180 15% 12%;
+    --card-foreground: 0 0% 98%;
+    --input: 210 15% 20%;
+    --border: 210 15% 30%;
+    --ring: 190 100% 36%;
+
+    --primary: 180 65% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 180 10% 24%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 210 10% 20%;
+    --muted-foreground: 0 0% 65%;
+
+    --accent: 350 75% 50%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 60% 40%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 180 10% 30%;
+    --input: 180 10% 20%;
+    --ring: 210 100% 60%;
+
+    /* Chart colors - darker mode versions */
+    --chart-1: 200 85% 65%;
+    --chart-2: 280 75% 70%;
+    --chart-3: 45 85% 70%;
+    --chart-4: 140 70% 60%;
+    --chart-5: 15 80% 70%;
+  }
 }
 
-/* dark mode */
-.dark {
-  --background: 180 10% 6%;
-  --foreground: 0 0% 98%;
-
-  --card: 180 15% 12%;
-  --card-foreground: 0 0% 98%;
-  --input: 210 15% 20%;
-  --border: 210 15% 30%;
-  --ring: 190 100% 36%;
-
-  --primary: 180 65% 50%;
-  --primary-foreground: 0 0% 100%;
-
-  --secondary: 180 10% 24%;
-  --secondary-foreground: 0 0% 98%;
-
-  --muted: 210 10% 20%;
-  --muted-foreground: 0 0% 65%;
-
-  --accent: 350 75% 50%;
-  --accent-foreground: 0 0% 100%;
-
-  --destructive: 0 60% 40%;
-  --destructive-foreground: 0 0% 100%;
-
-  --border: 180 10% 30%;
-  --input: 180 10% 20%;
-  --ring: 210 100% 60%;
-
-  /* Chart colors - darker mode versions */
-  --chart-1: 200 85% 65%;
-  --chart-2: 280 75% 70%;
-  --chart-3: 45 85% 70%;
-  --chart-4: 140 70% 60%;
-  --chart-5: 15 80% 70%;
-}
-}
-
-input[type="datetime-local"]::-webkit-calendar-picker-indicator {
-  filter: invert(1); /* flips light ↔ dark */
+/* 🗓️ Change calendar icon color based on theme */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 0.7;
   cursor: pointer;
-  color: aliceblue
+  transition:
+    opacity 0.2s ease,
+    filter 0.2s ease;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="15" viewBox="0 0 24 24"><path fill="red" d="M20 3h-1V1h-2v2H7V1H5v2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 18H4V8h16v13z"/></svg>');
 }
 
+/* 🌗 Hover effect (both themes) */
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+  filter: invert(45%) sepia(84%) saturate(441%) hue-rotate(85deg)
+    brightness(90%) contrast(95%);
+}
 
 @layer base {
   * {

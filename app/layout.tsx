@@ -27,10 +27,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const [, setTheme] = useState<string>("light");
+  const storedTheme = localStorage.getItem("theme") || "light";
 
   // ✅ Read theme from localStorage after mount
   useEffect(() => {
-    const storedTheme = localStorage.getItem("theme") || "light";
     setTheme(storedTheme);
     document.documentElement.classList.toggle("dark", storedTheme === "dark");
   }, []);
@@ -60,11 +60,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-      <ConvexProvider client={convex}>
-        <Sidebar />
-        <main className="pt-16 px-6 mx-auto max-w-[1200px]">{children}</main>
-        <DevFAB />
-      </ConvexProvider>
+        <ConvexProvider client={convex}>
+          <Sidebar />
+          <main className="pt-16 px-6 mx-auto max-w-[1200px]">{children}</main>
+          <DevFAB />
+        </ConvexProvider>
       </body>
     </html>
   );

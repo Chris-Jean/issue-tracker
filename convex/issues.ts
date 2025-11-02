@@ -11,7 +11,7 @@ export const generateUploadUrl = mutation({
 
 // Create
 export const createIssue = mutation({
-  args: {
+  args: v.object({
     title: v.string(),
     agent: v.string(),
     language: v.string(),
@@ -23,16 +23,17 @@ export const createIssue = mutation({
     reason: v.optional(v.string()),
     dateOfIncident: v.string(),
     image: v.optional(v.id("_storage")),
-  },
+    archived: v.optional(v.boolean()),
+  }),
   handler: async (ctx, args) => {
     try {
       const { image, ...issueData } = args;
       const issue = image ? { ...issueData, image } : issueData;
 
-      // ✅ Force archived = false for all new issues
+      // ✅ Ensure all new issues start unarchived
       const issueId = await ctx.db.insert("issues", {
         ...issue,
-        archived: false,
+        archived: args.archived ?? false,
       });
 
       return issueId;
@@ -95,6 +96,7 @@ export const updateIssue = mutation({
     category: v.optional(v.string()),
     reason: v.optional( v.string()),
     dateOfIncident: v.optional(v.string()),
+    image: v.optional(v.id("_storage")),
     _creationTime: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
@@ -249,38 +251,42 @@ export const getActiveIssues = query({
 export const archiveAllIssues = mutation({
   args: {},
   handler: async (ctx) => {
-    const allIssues = await ctx.db.query("issues").collect();
+    const allIssues = await ctx.db
+      .query("issues")
+      .filter(q =>
+        q.or(q.eq(q.field("archived"), false), q.eq(q.field("archived"), undefined))
+      )
+      .collect();
+
     for (const issue of allIssues) {
       await ctx.db.patch(issue._id, { archived: true });
     }
-    return "All issues archived successfully.";
+
+    return { count: allIssues.length };
   },
 });
+
 
 // ✅ Delete All Non-Archived Issues
 export const deleteAllActiveIssues = mutation({
   args: {},
   handler: async (ctx) => {
-    // ✅ Collect all issues that are NOT archived
+    // ✅ Only delete issues that are NOT archived
     const activeIssues = await ctx.db
       .query("issues")
-      .filter(q => 
-        q.or(
-          q.eq(q.field("archived"), false),
-          q.eq(q.field("archived"), undefined)
+      .filter((q) =>
+        q.and(
+          q.or(q.eq(q.field("archived"), false), q.eq(q.field("archived"), undefined)),
+          q.or(q.eq(q.field("deleted"), false), q.eq(q.field("deleted"), undefined))
         )
       )
       .collect();
 
-    // 🧹 Delete associated images if any
     for (const issue of activeIssues) {
       if (issue.image) await ctx.storage.delete(issue.image);
       await ctx.db.delete(issue._id);
     }
 
-    // ✅ Return useful info
     return { message: `Deleted ${activeIssues.length} active issues successfully.` };
   },
 });
-
-
