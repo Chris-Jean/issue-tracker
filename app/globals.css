@@ -42,6 +42,13 @@ body {
   --border: 210 16% 82%;
   --input: 210 16% 92%;
   --ring: 210 100% 50%;
+
+  /* Chart colors */
+  --chart-1: 200 90% 55%;
+  --chart-2: 280 80% 60%;
+  --chart-3: 45 90% 60%;
+  --chart-4: 140 75% 50%;
+  --chart-5: 15 85% 60%;
 }
 
 /* dark mode */
@@ -73,6 +80,13 @@ body {
   --border: 180 10% 30%;
   --input: 180 10% 20%;
   --ring: 210 100% 60%;
+
+  /* Chart colors - darker mode versions */
+  --chart-1: 200 85% 65%;
+  --chart-2: 280 75% 70%;
+  --chart-3: 45 85% 70%;
+  --chart-4: 140 70% 60%;
+  --chart-5: 15 80% 70%;
 }
 }
 

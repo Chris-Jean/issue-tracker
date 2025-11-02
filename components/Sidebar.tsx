@@ -53,7 +53,15 @@ export default function Sidebar() {
             className="text-foreground hover:text-primary transition"
             onClick={() => setIsOpen(false)}
           >
-            🏠 Dashboard
+            📊 Dashboard
+          </Link>
+
+          <Link
+            href="/issues"
+            className="text-foreground hover:text-primary transition"
+            onClick={() => setIsOpen(false)}
+          >
+            📝 Issues
           </Link>
 
           <Link

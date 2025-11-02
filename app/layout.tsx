@@ -5,6 +5,7 @@ import "./globals.css";
 import { ConvexProvider, ConvexReactClient } from "convex/react";
 import { useEffect, useState } from "react";
 import Sidebar from "@/components/Sidebar";
+import DevFAB from "@/components/dev/DevFAB";
 
 const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
@@ -62,6 +63,7 @@ export default function RootLayout({
       <ConvexProvider client={convex}>
         <Sidebar />
         <main className="pt-16 px-6 mx-auto max-w-[1200px]">{children}</main>
+        <DevFAB />
       </ConvexProvider>
       </body>
     </html>

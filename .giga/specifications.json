@@ -1,0 +1,22 @@
+[
+  {
+    "fileName": "main-overview.mdc",
+    "description": "Complete system overview documenting the issue tracking workflow, key components, and their interactions in the multi-language service environment"
+  },
+  {
+    "fileName": "service-project-mapping-model.mdc",
+    "description": "Detailed documentation of the service number to project mapping system, including client categorization, reason codes, and regional naming conventions"
+  },
+  {
+    "fileName": "archival-workflow-algorithm.mdc",
+    "description": "Technical specification of the two-stage deletion process, archiving rules, batch processing, and data integrity checks"
+  },
+  {
+    "fileName": "analytics-algorithms.mdc",
+    "description": "Documentation of trend analysis algorithms, including client frequency analysis, issue categorization, and performance optimizations"
+  },
+  {
+    "fileName": "data-flow-diagram.mdc",
+    "description": "Comprehensive documentation of data flow between IssueForm, archiving logic, and analytics components, including image handling and validation processes"
+  }
+]
