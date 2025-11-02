@@ -9,7 +9,6 @@ import DevFAB from "@/components/dev/DevFAB";
 
 const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
-
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
@@ -23,17 +22,34 @@ const geistMono = localFont({
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  const [, setTheme] = useState<string>("light");
-  const storedTheme = localStorage.getItem("theme") || "light";
+}: Readonly<{ children: React.ReactNode }>) {
+  const [theme, setTheme] = useState("light");
 
-  // ✅ Read theme from localStorage after mount
+  // ✅ Read theme safely from localStorage after mount
   useEffect(() => {
-    setTheme(storedTheme);
-    document.documentElement.classList.toggle("dark", storedTheme === "dark");
+    try {
+      const stored = localStorage.getItem("theme");
+      if (stored) {
+        setTheme(stored);
+        document.documentElement.classList.toggle("dark", stored === "dark");
+      } else {
+        // fallback: follow system preference
+        const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        const defaultTheme = prefersDark ? "dark" : "light";
+        setTheme(defaultTheme);
+        document.documentElement.classList.toggle("dark", defaultTheme === "dark");
+      }
+    } catch (err) {
+      console.warn("Theme load error:", err);
+    }
   }, []);
+
+  // ✅ Update localStorage whenever theme changes
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("theme", theme);
+    }
+  }, [theme]);
 
   return (
     <html lang="en">
