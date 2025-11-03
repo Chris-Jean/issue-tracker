@@ -1,4 +1,4 @@
-import { Doc } from "../convex/_generated/dataModel";
+import { Doc } from "../../convex/_generated/dataModel";
 
 export type MetaIssue = Doc<"issues">;
 
