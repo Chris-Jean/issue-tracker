@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect } from "react";
-import type { MetaIssue } from "./types";
+import type { MetaIssue, ConvexIssue  } from "./types";
 
 interface IssueDetailProps {
   issue: MetaIssue;
@@ -13,7 +13,7 @@ interface IssueDetailProps {
 }
 
 export default function IssueDetail({ issue, onClose, onUpdate }: IssueDetailProps) {
-  const [editedIssue, setEditedIssue] = useState<MetaIssue>(issue);
+  const [editedIssue, setEditedIssue] = useState<Partial<ConvexIssue>>({});
 
   useEffect(() => {
     setEditedIssue(issue);
