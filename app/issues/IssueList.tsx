@@ -30,9 +30,10 @@ import { Id } from "@/convex/_generated/dataModel";
 import { exportToJsonExcel } from "@/helpers/fileHelpers";
 
 interface IssueListProps {
-  issues?: ConvexIssue[];
+  issues: ConvexIssue[];
+  onSelectIssue: (issue: MetaIssue) => void;  // ✅ add this
   onEditIssue: (issue: MetaIssue) => void;
-  onDeleteIssue: (id: Id<"issues">) => void;
+  onDeleteIssue: (id: MetaIssue["_id"]) => void;
   onRefresh: () => void;
 }
 
