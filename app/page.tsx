@@ -16,7 +16,11 @@ export default function DashboardPage() {
     if (!issues) return null
 
     const engine = new MetricEngine()
-    return engine.processMetrics(metricsConfig, issues)
+
+    // 🔹 Strip UI-only fields like imageUrl before analytics
+    const cleanIssues = issues.map(({ imageUrl, ...rest }) => rest)
+
+    return engine.processMetrics(metricsConfig, cleanIssues)
   }, [issues])
 
   if (issues === undefined || metricsData === null) {

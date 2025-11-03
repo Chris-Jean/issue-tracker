@@ -1,4 +1,4 @@
-import { ConvexIssue } from "@/app/types"
+import { ConvexIssue } from "@/app/issues/types"
 
 export function extractDistribution(
   issues: ConvexIssue[],

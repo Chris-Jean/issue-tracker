@@ -1,4 +1,4 @@
-import { ConvexIssue } from "@/app/types"
+import { ConvexIssue } from "@/app/issues/types"
 
 export function extractTimeSeries(
   issues: ConvexIssue[],
@@ -20,8 +20,11 @@ export function extractTimeSeries(
     const timestamp = issue[params.field]
     if (!timestamp) return
 
-    const date = new Date(typeof timestamp === 'number' ? timestamp : timestamp)
-    if (date < startDate) return
+    // ✅ Only process if the field is a string or number
+    if (typeof timestamp !== "string" && typeof timestamp !== "number") return
+
+    const date = new Date(timestamp)
+    if (isNaN(date.getTime()) || date < startDate) return
 
     const key = getGroupKey(date, groupBy)
     dataMap.set(key, (dataMap.get(key) || 0) + 1)

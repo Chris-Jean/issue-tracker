@@ -1,4 +1,4 @@
-import { ConvexIssue } from "@/app/types"
+import { ConvexIssue } from "@/app/issues/types"
 import { MetricConfig } from "../types/MetricConfig"
 import { DataExtractor } from "./DataExtractor"
 import { TransformPipeline } from "./TransformPipeline"

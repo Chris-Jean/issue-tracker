@@ -32,7 +32,12 @@ export function filterByField(
 
 export function top(data: any[], params: { n: number; by?: string }): any[] {
   const sorted = params.by
-    ? [...data].sort((a, b) => b[params.by] - a[params.by])
+    ? [...data].sort((a, b) => {
+        const key = params.by as keyof typeof a
+        const valA = a[key]
+        const valB = b[key]
+        return (Number(valB) || 0) - (Number(valA) || 0)
+      })
     : data
 
   return sorted.slice(0, params.n)
@@ -40,7 +45,12 @@ export function top(data: any[], params: { n: number; by?: string }): any[] {
 
 export function bottom(data: any[], params: { n: number; by?: string }): any[] {
   const sorted = params.by
-    ? [...data].sort((a, b) => a[params.by] - b[params.by])
+    ? [...data].sort((a, b) => {
+        const key = params.by as keyof typeof a
+        const valA = a[key]
+        const valB = b[key]
+        return (Number(valA) || 0) - (Number(valB) || 0)
+      })
     : data
 
   return sorted.slice(0, params.n)

@@ -46,7 +46,10 @@ export default function DonutChart({
           outerRadius={outerRadius}
           paddingAngle={2}
           dataKey="value"
-          label={({ name, percentage }) => `${name}: ${percentage.toFixed(1)}%`}
+          label={(props) => {
+            const { name, percentage } = props as unknown as { name: string; percentage: number };
+            return `${name}: ${percentage.toFixed(1)}%`;
+          }}          
         >
           {data.map((entry, index) => (
             <Cell

@@ -1,4 +1,4 @@
-import { ConvexIssue } from "@/app/types"
+import { ConvexIssue } from "@/app/issues/types"
 import { DataExtractorConfig } from "../types/MetricConfig"
 import * as extractors from "../extractors"
 

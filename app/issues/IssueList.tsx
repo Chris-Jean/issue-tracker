@@ -31,7 +31,7 @@ import { exportToJsonExcel } from "@/helpers/fileHelpers";
 
 interface IssueListProps {
   issues: ConvexIssue[];
-  onSelectIssue: (issue: MetaIssue) => void;  // ✅ add this
+  onSelectIssue?: (issue: MetaIssue) => void;  // ✅ optional now
   onEditIssue: (issue: MetaIssue) => void;
   onDeleteIssue: (id: MetaIssue["_id"]) => void;
   onRefresh: () => void;
@@ -41,6 +41,7 @@ const ITEMS_PER_PAGE = 7;
 
 export default function IssueList({
   issues,
+  onSelectIssue,
   onEditIssue,
   onDeleteIssue,
   onRefresh,
@@ -266,7 +267,11 @@ useEffect(() => {
                           <div
                             key={issue._id}
                             className="border p-3 mb-3 rounded bg-background cursor-pointer transition-all hover:bg-accent/40"
-                            onClick={() => toggleCard(issue._id as unknown as string)}
+                            onClick={() => {
+                              toggleCard(issue._id as unknown as string);
+                              if (onSelectIssue) onSelectIssue(issue as MetaIssue); // ✅ call only if it exists
+                            }}
+                            
                           >
                             <div className="flex justify-between items-center">
                               <div>

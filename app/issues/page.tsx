@@ -10,14 +10,15 @@ import {
   useQuery,
 } from "convex/react";
 import { useState } from "react";
-import IssueDetail from "./IssueDetail";
-import IssueFormModal from "./IssueFormModal";
+//import IssueDetail from "./IssueDetail";
+//import IssueFormModal from "./IssueFormModal";
 import IssueList from "./IssueList";
 import type { ConvexIssue, MetaIssue } from "./types";
 import { Id } from "@/convex/_generated/dataModel"; // ✅ Import Convex ID type
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
+import TicketModal from "../TicketModal";
 
 
 function Home() {
@@ -29,59 +30,67 @@ function Home() {
   const generateUploadUrl = useMutation(api.issues.generateUploadUrl);
   const [refreshKey, setRefreshKey] = useState(0);
 
+  const [isModalOpen, setModalOpen] = useState(false);
+  const [editingIssue, setEditingIssue] = useState<ConvexIssue | null>(null);
+
+
   const [selectedIssue, setSelectedIssue] = useState<MetaIssue | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
-  const handleAddIssue = async (
-    newIssue: Omit<ConvexIssue, "_id" | "_creationTime">,
+  const handleAddOrUpdateIssue = async (
+    issue: Omit<ConvexIssue, "_id" | "_creationTime">,
     selectedImage: File | null
   ) => {
     try {
-      let imageId: Id<"_storage"> | undefined;
-
-      // Upload image if one is selected
+      let imageId: Id<"_storage"> | undefined = editingIssue?.image;
+  
+      // 🖼 If a new image was selected, upload it first
       if (selectedImage) {
-        // Step 1: Get a short-lived upload URL
         const postUrl = await generateUploadUrl();
-
-        // Step 2: POST the file to the URL
-        const result = await fetch(postUrl, {
+        const uploadResponse = await fetch(postUrl, {
           method: "POST",
           headers: { "Content-Type": selectedImage.type },
           body: selectedImage,
         });
-
-        if (!result.ok) {
-          throw new Error("Image upload failed. Please try again.");
-        }
-
-        // Get the storage ID from the response
-        const { storageId } = await result.json();
-        imageId = storageId as Id<"_storage">; // ✅ Correct Type
+        if (!uploadResponse.ok) throw new Error("Image upload failed.");
+        const { storageId } = await uploadResponse.json();
+        imageId = storageId as Id<"_storage">;
       }
-
-      const newIssueWithId = imageId
-        ? { ...newIssue, image: imageId }
-        : { ...newIssue };
-
-        await createIssue(newIssueWithId as Parameters<typeof createIssue>[0]);
-      toast({ title: "Success", description: "Issue created successfully" });
-      setIsCreateModalOpen(false);
+  
+      if (editingIssue) {
+        // ✏️ UPDATE EXISTING ISSUE
+        await updateIssue({
+          _id: editingIssue._id as Id<"issues">,
+          title: issue.title,
+          agent: issue.agent,
+          language: issue.language,
+          description: issue.description,
+          userType: issue.userType,
+          VPN: issue.VPN,
+          internetSource: issue.internetSource,
+          category: issue.category,
+          reason: issue.reason,
+          dateOfIncident: issue.dateOfIncident,
+          image: imageId,
+        });
+        toast({ title: "Updated", description: "Ticket updated successfully!" });
+        setEditingIssue(null);
+      } else {
+        // 🆕 CREATE NEW ISSUE
+        await createIssue({
+          ...issue,
+          image: imageId,
+        });
+        toast({ title: "Created", description: "Ticket created successfully!" });
+      }
+  
+      setModalOpen(false);
+      setRefreshKey((prev) => prev + 1);
     } catch (error) {
-      console.error("Error adding issue:", error);
-      toast({ title: "Error", description: "Failed to create issue. Try again." });
+      console.error(error);
+      toast({ title: "Error", description: "Failed to save ticket." });
     }
-  };
-
-  const handleUpdateIssue = async (updatedIssue: MetaIssue) => {
-    try {
-      await updateIssue(updatedIssue);
-      setSelectedIssue(updatedIssue);
-    } catch (error) {
-      console.error("Error updating issue:", error);
-      toast({ title: "Error", description: "Failed to update issue." });
-    }
-  };
+  };  
 
   const handleDeleteIssue = async (id: MetaIssue["_id"]) => {
     try {
@@ -108,41 +117,42 @@ function Home() {
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">Issues</h2>
         <Button
-          onClick={() => setIsCreateModalOpen(true)}
-          className="flex items-center gap-2"
-        >
-          <Plus className="w-4 h-4" />
-          Create Issue
-        </Button>
+  onClick={() => {
+    setEditingIssue(null);  // Clear old edit data
+    setModalOpen(true);     // Open the same modal
+  }}
+  className="flex items-center gap-2"
+>
+  <Plus className="w-4 h-4" />
+  Create Issue
+</Button>
+
       </div>
 
       {issues && (
         <IssueList
-          key={refreshKey}
-          issues={issues}
-          onSelectIssue={setSelectedIssue}
-          onEditIssue={setSelectedIssue}
-          onDeleteIssue={handleDeleteIssue}
-          onRefresh={() => setRefreshKey((prev) => prev + 1)}
-        />
-      )}
-
-      {/* Create Issue Modal */}
-      <IssueFormModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onSubmit={handleAddIssue}
-        title="Create New Issue"
+        key={refreshKey}
+        issues={issues}
+        onEditIssue={(issue) => {
+          setEditingIssue(issue);
+          setModalOpen(true);
+        }}
+        onDeleteIssue={handleDeleteIssue}
+        onRefresh={() => setRefreshKey((prev) => prev + 1)}
       />
-
-      {/* Issue Detail Modal */}
-      {selectedIssue && (
-        <IssueDetail
-          issue={selectedIssue}
-          onClose={handleCloseDetail}
-          onUpdate={handleUpdateIssue}
-        />
+      
       )}
+
+          <TicketModal
+          isOpen={isModalOpen}
+          onClose={() => {
+          setModalOpen(false);
+          setEditingIssue(null);
+          }}
+          onSubmit={handleAddOrUpdateIssue}
+          initialIssue={editingIssue || undefined}
+        />
+
 
       <Toaster />
     </main>

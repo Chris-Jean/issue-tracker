@@ -1,4 +1,4 @@
-import { ConvexIssue } from "@/app/types"
+import { ConvexIssue } from "@/app/issues/types"
 import { ComponentType } from "react"
 
 // ============================================
@@ -70,9 +70,15 @@ export type ExtractorType =
 export type Transform = {
   type: TransformType
   params?: Record<string, any>
-  // Custom transform function
-  fn?: (data: any, params?: any) => any
+  /**
+   * Optional custom transformation function.
+   * @param data - Raw data input for the transform.
+   * @param params - Optional configuration for the transform.
+   * @param context - Optional shared context (e.g., other metric results).
+   */
+  fn?: (data: any, params?: any, context?: any) => any
 }
+
 
 export type TransformType =
   // Aggregations
@@ -225,4 +231,6 @@ export interface DistributionDataPoint {
   value: number
   percentage: number
   color?: string
+  [key: string]: string | number | undefined  
 }
+
