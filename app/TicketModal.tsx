@@ -1,8 +1,8 @@
 "use client";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import IssueForm from "./IssueForm";
-import type { ConvexIssue } from "./types";
+import IssueForm from "./issues/IssueForm";
+import type { ConvexIssue } from "./issues/types";
 import { useState, useEffect } from "react";
 
 interface TicketModalProps {
