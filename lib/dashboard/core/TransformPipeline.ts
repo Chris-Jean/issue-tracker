@@ -1,17 +1,11 @@
 import { Transform } from "../types/MetricConfig"
 import * as transforms from "../transforms"
 
-type GenericData = unknown
-type GenericParams = Record<string, unknown>
-
-/**
- * 🧩 Handles sequential data transformation for dashboard metrics.
- */
 export class TransformPipeline {
   /**
-   * Apply a series of transformations to data.
+   * Apply a series of transformations to data
    */
-  apply(data: GenericData, transformConfigs: Transform[]): GenericData {
+  apply(data: any, transformConfigs: Transform[]): any {
     let result = data
 
     for (const config of transformConfigs) {
@@ -22,61 +16,53 @@ export class TransformPipeline {
   }
 
   /**
-   * Apply a single transformation.
+   * Apply a single transformation
    */
-  private applyTransform(data: GenericData, config: Transform): GenericData {
+  private applyTransform(data: any, config: Transform): any {
     // Use custom function if provided
     if (config.fn) {
       return config.fn(data, config.params)
     }
 
     // Use built-in transform
-    const transformFn = this.getTransform(config.type)
-    if (!transformFn) {
+    const transform = this.getTransform(config.type)
+    if (!transform) {
       throw new Error(`Unknown transform type: ${config.type}`)
     }
 
-    return transformFn(data, config.params)
+    return transform(data, config.params)
   }
 
-  /**
-   * Returns a registered transform function by name.
-   */
-  private getTransform(
-    type: string
-  ): ((data: GenericData, params?: GenericParams) => GenericData) | null {
-    const transformMap: Record<
-      string,
-      (data: GenericData, params?: GenericParams) => GenericData
-    > = {
+  private getTransform(type: string): Function | null {
+    const transformMap: Record<string, Function> = {
       // Aggregations
-      count: transforms.count as (data: GenericData) => GenericData,
-      sum: transforms.sum as (data: GenericData, params?: GenericParams) => GenericData,
-      average: transforms.average as (data: GenericData, params?: GenericParams) => GenericData,
+      count: transforms.count,
+      sum: transforms.sum,
+      average: transforms.average,
 
       // Filtering
-      filter: transforms.filter as (data: GenericData, params?: GenericParams) => GenericData,
-      filterByDate: transforms.filterByDate as (data: GenericData, params?: GenericParams) => GenericData,
-      top: transforms.top as (data: GenericData, params?: GenericParams) => GenericData,
-      bottom: transforms.bottom as (data: GenericData, params?: GenericParams) => GenericData,
+      filter: transforms.filter,
+      filterByDate: transforms.filterByDate,
+      top: transforms.top,
+      bottom: transforms.bottom,
 
       // Sorting
-      sortBy: transforms.sortBy as (data: GenericData, params?: GenericParams) => GenericData,
-      sortByCount: transforms.sortByCount as (data: GenericData, params?: GenericParams) => GenericData,
+      sortBy: transforms.sortBy,
+      sortByCount: transforms.sortByCount,
 
       // Grouping
-      groupBy: transforms.groupBy as (data: GenericData, params?: GenericParams) => GenericData,
-      groupByDate: transforms.groupByDate as (data: GenericData, params?: GenericParams) => GenericData,
+      groupBy: transforms.groupBy,
+      groupByDate: transforms.groupByDate,
 
       // Statistical
-      percentage: transforms.percentage as (data: GenericData, params?: GenericParams) => GenericData,
-      percentageChange: transforms.percentageChange as (data: GenericData, params?: GenericParams) => GenericData,
-      trend: transforms.trend as (data: GenericData, params?: GenericParams) => GenericData,
+      percentage: transforms.percentage,
+      percentageChange: transforms.percentageChange,
+      trend: transforms.trend,
 
       // Formatting
-      round: transforms.round as (data: GenericData, params?: GenericParams) => GenericData,
-      formatNumber: transforms.formatNumber as (data: GenericData, params?: GenericParams) => GenericData,
-      formatPercentage: transforms.formatPercentage as (data: GenericData, params?: GenericParams) => GenericData,
+      round: transforms.round,
+      formatNumber: transforms.formatNumber,
+      formatPercentage: transforms.formatPercentage,
     }
 
     return transformMap[type] || null

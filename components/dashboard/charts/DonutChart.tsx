@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import {
   PieChart,
@@ -6,34 +6,26 @@ import {
   Cell,
   ResponsiveContainer,
   Tooltip,
-  Legend,
-} from "recharts";
-import { DistributionDataPoint } from "@/lib/dashboard/types/MetricConfig";
-
-type TooltipProps = {
-  payload?: { percentage?: number };
-};
+  Legend
+} from 'recharts'
+import { DistributionDataPoint } from "@/lib/dashboard/types/MetricConfig"
 
 interface DonutChartProps {
-  data: DistributionDataPoint[];
-  height?: number;
-  colors?: string[];
-  innerRadius?: number;
-  outerRadius?: number;
-  tooltipFormatter?: (
-    value: number,
-    name: string,
-    props: TooltipProps
-  ) => string[];
+  data: DistributionDataPoint[]
+  height?: number
+  colors?: string[]
+  innerRadius?: number
+  outerRadius?: number
+  tooltipFormatter?: (value: any, name: string, props: any) => string[]
 }
 
 const DEFAULT_COLORS = [
-  "hsl(var(--chart-1))",
-  "hsl(var(--chart-2))",
-  "hsl(var(--chart-3))",
-  "hsl(var(--chart-4))",
-  "hsl(var(--chart-5))",
-];
+  'hsl(var(--chart-1))',
+  'hsl(var(--chart-2))',
+  'hsl(var(--chart-3))',
+  'hsl(var(--chart-4))',
+  'hsl(var(--chart-5))',
+]
 
 export default function DonutChart({
   data,
@@ -41,17 +33,8 @@ export default function DonutChart({
   colors = DEFAULT_COLORS,
   innerRadius = 60,
   outerRadius = 100,
-  tooltipFormatter,
+  tooltipFormatter
 }: DonutChartProps) {
-  const defaultFormatter = (
-    value: number,
-    name: string,
-    props: TooltipProps
-  ): string[] => [
-    `${value} (${(props.payload?.percentage ?? 0).toFixed(1)}%)`,
-    name,
-  ];
-
   return (
     <ResponsiveContainer width="100%" height={height}>
       <PieChart>
@@ -63,9 +46,7 @@ export default function DonutChart({
           outerRadius={outerRadius}
           paddingAngle={2}
           dataKey="value"
-          label={({ name, percentage }: DistributionDataPoint) =>
-            `${name}: ${percentage.toFixed(1)}%`
-          }
+          label={({ name, percentage }) => `${name}: ${percentage.toFixed(1)}%`}
         >
           {data.map((entry, index) => (
             <Cell
@@ -76,21 +57,22 @@ export default function DonutChart({
         </Pie>
         <Tooltip
           contentStyle={{
-            backgroundColor: "hsl(var(--card))",
-            border: "1px solid hsl(var(--border))",
-            borderRadius: "8px",
-            color: "hsl(var(--foreground))",
+            backgroundColor: 'hsl(var(--card))',
+            border: '1px solid hsl(var(--border))',
+            borderRadius: '8px',
+            color: 'hsl(var(--foreground))'
           }}
-          formatter={tooltipFormatter ?? defaultFormatter}
+          formatter={tooltipFormatter || ((value: any, name: string, props: any) => [
+            `${value} (${props.payload.percentage.toFixed(1)}%)`,
+            name
+          ])}
         />
         <Legend
           verticalAlign="bottom"
           height={36}
-          formatter={(value) => (
-            <span className="text-sm text-foreground">{value}</span>
-          )}
+          formatter={(value) => <span className="text-sm text-foreground">{value}</span>}
         />
       </PieChart>
     </ResponsiveContainer>
-  );
+  )
 }

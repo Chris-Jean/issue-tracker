@@ -3,15 +3,9 @@ import { MetricConfig } from "../types/MetricConfig"
 import { DataExtractor } from "./DataExtractor"
 import { TransformPipeline } from "./TransformPipeline"
 
-type Context = Record<string, unknown>
-
-/**
- * ⚙️ MetricEngine
- * Orchestrates metric data extraction, transformation, and dependency resolution.
- */
 export class MetricEngine {
-  private readonly dataExtractor: DataExtractor
-  private readonly transformPipeline: TransformPipeline
+  private dataExtractor: DataExtractor
+  private transformPipeline: TransformPipeline
 
   constructor() {
     this.dataExtractor = new DataExtractor()
@@ -19,22 +13,26 @@ export class MetricEngine {
   }
 
   /**
-   * Process a single metric configuration and return its computed data.
+   * Process a metric configuration and return rendered data
    */
   processMetric(
     config: MetricConfig,
     issues: ConvexIssue[],
-    context: Context = {}
-  ): unknown {
-    // 1️⃣ Extract raw data
-    let data = this.dataExtractor.extract(config.dataSource, issues, context)
+    context?: Record<string, any>
+  ): any {
+    // 1. Extract raw data
+    let data = this.dataExtractor.extract(
+      config.dataSource,
+      issues,
+      context
+    )
 
-    // 2️⃣ Apply transformation pipeline
-    if (config.transforms?.length) {
+    // 2. Apply transformations
+    if (config.transforms && config.transforms.length > 0) {
       data = this.transformPipeline.apply(data, config.transforms)
     }
 
-    // 3️⃣ Render condition check
+    // 3. Check render condition
     if (config.renderCondition && !config.renderCondition(data)) {
       return null
     }
@@ -43,39 +41,39 @@ export class MetricEngine {
   }
 
   /**
-   * Process multiple metrics — supports dependency resolution.
+   * Process multiple metrics (handles dependencies)
    */
   processMetrics(
     configs: MetricConfig[],
     issues: ConvexIssue[],
-    context: Context = {}
-  ): Map<string, unknown> {
-    const results = new Map<string, unknown>()
+    context?: Record<string, any>
+  ): Map<string, any> {
+    const results = new Map<string, any>()
     const processed = new Set<string>()
     const toProcess = [...configs]
 
     while (toProcess.length > 0) {
       const config = toProcess.shift()!
 
-      // Ensure dependencies are met
+      // Check if dependencies are met
       if (config.dependencies) {
         const dependenciesMet = config.dependencies.every(dep =>
           processed.has(dep)
         )
 
         if (!dependenciesMet) {
-          toProcess.push(config)
+          toProcess.push(config) // Re-queue
           continue
         }
       }
 
-      // Include dependency results in context
-      const enrichedContext: Context = {
+      // Add dependency results to context
+      const enrichedContext = {
         ...context,
-        metrics: Object.fromEntries(results),
+        metrics: Object.fromEntries(results)
       }
 
-      // Compute metric
+      // Process metric
       const data = this.processMetric(config, issues, enrichedContext)
       results.set(config.id, data)
       processed.add(config.id)

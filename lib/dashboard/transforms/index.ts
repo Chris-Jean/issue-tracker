@@ -1,104 +1,73 @@
 // Aggregations
-export * from "./aggregations";
+export * from './aggregations'
 
 // Filtering
-export * from "./filtering";
+export * from './filtering'
 
 // Statistical
-export * from "./statistical";
+export * from './statistical'
 
 // Formatting
-export * from "./formatting";
+export * from './formatting'
 
-type GenericRecord = Record<string, unknown>;
-
-/**
- * Sorts data by a specific field, ascending or descending.
- */
-export function sortBy<T extends GenericRecord>(
-  data: T[],
-  params: { field: keyof T; order?: "asc" | "desc" }
-): T[] {
-  const order = params.order || "asc";
-  const field = params.field;
-
+// Sorting
+export function sortBy(data: any[], params: { field: string; order?: 'asc' | 'desc' }): any[] {
+  const order = params.order || 'asc'
   return [...data].sort((a, b) => {
-    const aVal = a[field] as number | string | Date;
-    const bVal = b[field] as number | string | Date;
+    const aVal = a[params.field]
+    const bVal = b[params.field]
 
-    if (aVal === bVal) return 0;
-    if (aVal == null) return 1;
-    if (bVal == null) return -1;
-
-    if (order === "asc") return aVal > bVal ? 1 : -1;
-    return aVal < bVal ? 1 : -1;
-  });
+    if (order === 'asc') {
+      return aVal > bVal ? 1 : aVal < bVal ? -1 : 0
+    } else {
+      return aVal < bVal ? 1 : aVal > bVal ? -1 : 0
+    }
+  })
 }
 
-/**
- * Sorts by the 'count' field (descending by default).
- */
-export function sortByCount<T extends { count?: number }>(
-  data: T[],
-  params?: { order?: "asc" | "desc" }
-): T[] {
-  return sortBy(data, { field: "count", order: params?.order || "desc" } as {
-    field: keyof T;
-    order?: "asc" | "desc";
-  });
+export function sortByCount(data: any[], params?: { order?: 'asc' | 'desc' }): any[] {
+  return sortBy(data, { field: 'count', order: params?.order || 'desc' })
 }
 
-/**
- * Groups data by a given field.
- */
-export function groupBy<T extends GenericRecord>(
-  data: T[],
-  params: { field: keyof T }
-): Record<string, T[]> {
+// Grouping
+export function groupBy(data: any[], params: { field: string }): Record<string, any[]> {
   return data.reduce((acc, item) => {
-    const key = String(item[params.field] ?? "Unknown");
-    if (!acc[key]) acc[key] = [];
-    acc[key].push(item);
-    return acc;
-  }, {} as Record<string, T[]>);
+    const key = item[params.field] || 'Unknown'
+    if (!acc[key]) acc[key] = []
+    acc[key].push(item)
+    return acc
+  }, {} as Record<string, any[]>)
 }
 
-/**
- * Groups data by date intervals (day, week, month, or year).
- */
-export function groupByDate<T extends GenericRecord>(
-  data: T[],
-  params: { field: keyof T; groupBy: "day" | "week" | "month" | "year" }
-): Record<string, T[]> {
+export function groupByDate(
+  data: any[],
+  params: { field: string; groupBy: 'day' | 'week' | 'month' | 'year' }
+): Record<string, any[]> {
   return data.reduce((acc, item) => {
-    const rawDate = item[params.field];
-    if (!rawDate) return acc;
-
-    const date = new Date(String(rawDate));
-    let key: string;
+    const date = new Date(item[params.field])
+    let key: string
 
     switch (params.groupBy) {
-      case "day":
-        key = date.toISOString().split("T")[0];
-        break;
-      case "week": {
-        const weekStart = new Date(date);
-        weekStart.setDate(date.getDate() - date.getDay());
-        key = weekStart.toISOString().split("T")[0];
-        break;
-      }
-      case "month":
-        key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-        break;
-      case "year":
-        key = String(date.getFullYear());
-        break;
+      case 'day':
+        key = date.toISOString().split('T')[0]
+        break
+      case 'week':
+        const weekStart = new Date(date)
+        weekStart.setDate(date.getDate() - date.getDay())
+        key = weekStart.toISOString().split('T')[0]
+        break
+      case 'month':
+        key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+        break
+      case 'year':
+        key = String(date.getFullYear())
+        break
       default:
-        key = date.toISOString().split("T")[0];
+        key = date.toISOString().split('T')[0]
     }
 
-    if (!acc[key]) acc[key] = [];
-    acc[key].push(item);
-    return acc;
-  }, {} as Record<string, T[]>);
+    if (!acc[key]) acc[key] = []
+    acc[key].push(item)
+    return acc
+  }, {} as Record<string, any[]>)
 }

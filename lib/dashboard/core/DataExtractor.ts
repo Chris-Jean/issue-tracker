@@ -1,13 +1,6 @@
-import { ConvexIssue } from "@/app/types";
-import { DataExtractorConfig } from "../types/MetricConfig";
-import * as extractors from "../extractors";
-
-type Context = Record<string, unknown>;
-type ExtractorFn = (
-  issues: ConvexIssue[],
-  params?: Record<string, unknown>,
-  context?: Context
-) => unknown;
+import { ConvexIssue } from "@/app/types"
+import { DataExtractorConfig } from "../types/MetricConfig"
+import * as extractors from "../extractors"
 
 export class DataExtractor {
   /**
@@ -16,32 +9,32 @@ export class DataExtractor {
   extract(
     config: DataExtractorConfig,
     issues: ConvexIssue[],
-    context?: Context
-  ): unknown {
+    context?: Record<string, any>
+  ): any {
     // Use custom extractor if provided
     if (config.extract) {
-      return config.extract(issues, config.params);
+      return config.extract(issues, config.params)
     }
 
     // Use built-in extractor
-    const extractor = this.getExtractor(config.type);
+    const extractor = this.getExtractor(config.type)
     if (!extractor) {
-      throw new Error(`Unknown extractor type: ${config.type}`);
+      throw new Error(`Unknown extractor type: ${config.type}`)
     }
 
-    return extractor(issues, config.params, context);
+    return extractor(issues, config.params, context)
   }
 
-  private getExtractor(type: string): ExtractorFn | null {
-    const extractorMap: Record<string, ExtractorFn> = {
+  private getExtractor(type: string): Function | null {
+    const extractorMap: Record<string, Function> = {
       volume: extractors.extractVolume,
       topN: extractors.extractTopN,
       timeSeries: extractors.extractTimeSeries,
       distribution: extractors.extractDistribution,
       comparison: extractors.extractComparison,
       aggregation: extractors.extractAggregation,
-    };
+    }
 
-    return extractorMap[type] ?? null;
+    return extractorMap[type] || null
   }
 }

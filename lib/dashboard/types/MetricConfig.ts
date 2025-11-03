@@ -24,100 +24,104 @@ export interface MetricConfig {
 
   // Component rendering
   component: ChartComponent
-  componentProps?: Record<string, unknown>
+  componentProps?: Record<string, any>
 
   // Layout
   layout: LayoutConfig
 
   // Conditional rendering
-  renderCondition?: (data: unknown) => boolean
+  renderCondition?: (data: any) => boolean
 
   // Dependencies (for computed metrics)
   dependencies?: MetricId[]
 }
 
 export type MetricCategory =
-  | "volume"
-  | "distribution"
-  | "trend"
-  | "comparison"
-  | "performance"
+  | 'volume'
+  | 'distribution'
+  | 'trend'
+  | 'comparison'
+  | 'performance'
 
 // ============================================
 // Data Extraction
 // ============================================
 
-export interface DataExtractorConfig {
+export type DataExtractorConfig = {
   type: ExtractorType
-  params?: Record<string, unknown>
+  params?: Record<string, any>
   // Custom extractor function
-  extract?: (
-    issues: ConvexIssue[],
-    params?: Record<string, unknown>
-  ) => unknown
+  extract?: (issues: ConvexIssue[], params?: any) => any
 }
 
 export type ExtractorType =
-  | "volume" // Total counts
-  | "topN" // Top N by field
-  | "timeSeries" // Time-based data points
-  | "distribution" // Category distribution
-  | "comparison" // Period comparison
-  | "aggregation" // Custom aggregation
-  | "custom" // Custom function
+  | 'volume'           // Total counts
+  | 'topN'             // Top N by field
+  | 'timeSeries'       // Time-based data points
+  | 'distribution'     // Category distribution
+  | 'comparison'       // Period comparison
+  | 'aggregation'      // Custom aggregation
+  | 'custom'           // Custom function
 
 // ============================================
 // Transformations
 // ============================================
 
-export interface Transform {
+export type Transform = {
   type: TransformType
-  params?: Record<string, unknown>
+  params?: Record<string, any>
   // Custom transform function
-  fn?: (data: unknown[], params?: Record<string, unknown>) => unknown[]
+  fn?: (data: any, params?: any) => any
 }
 
 export type TransformType =
   // Aggregations
-  | "count"
-  | "sum"
-  | "average"
-  | "median"
-  | "min"
-  | "max"
+  | 'count'
+  | 'sum'
+  | 'average'
+  | 'median'
+  | 'min'
+  | 'max'
+
   // Filtering
-  | "filter"
-  | "filterByDate"
-  | "filterByField"
-  | "top"
-  | "bottom"
+  | 'filter'
+  | 'filterByDate'
+  | 'filterByField'
+  | 'top'
+  | 'bottom'
+
   // Sorting
-  | "sortBy"
-  | "sortByCount"
-  | "sortByDate"
+  | 'sortBy'
+  | 'sortByCount'
+  | 'sortByDate'
+
   // Grouping
-  | "groupBy"
-  | "groupByDate"
-  | "groupByField"
+  | 'groupBy'
+  | 'groupByDate'
+  | 'groupByField'
+
   // Statistical
-  | "percentage"
-  | "percentageChange"
-  | "trend"
-  | "ranking"
-  | "normalize"
+  | 'percentage'
+  | 'percentageChange'
+  | 'trend'
+  | 'ranking'
+  | 'normalize'
+
   // Temporal
-  | "dateRange"
-  | "timeWindow"
-  | "rollingAverage"
-  | "weekOverWeek"
-  | "monthOverMonth"
+  | 'dateRange'
+  | 'timeWindow'
+  | 'rollingAverage'
+  | 'weekOverWeek'
+  | 'monthOverMonth'
+
   // Formatting
-  | "round"
-  | "formatNumber"
-  | "formatCurrency"
-  | "formatPercentage"
+  | 'round'
+  | 'formatNumber'
+  | 'formatCurrency'
+  | 'formatPercentage'
+
   // Custom
-  | "custom"
+  | 'custom'
 
 // ============================================
 // Label Formatting
@@ -131,19 +135,11 @@ export interface LabelFormatters {
   value?: ValueFormatter
 }
 
-export type LabelFormatter = (
-  value: unknown,
-  index?: number,
-  data?: unknown
-) => string
+export type LabelFormatter = (value: any, index?: number, data?: any) => string
 
 export type ValueFormatter = (value: number) => string
 
-export type TooltipFormatter = (
-  value: unknown,
-  name: string,
-  props: Record<string, unknown>
-) => string[]
+export type TooltipFormatter = (value: any, name: string, props: any) => string[]
 
 // ============================================
 // Component Configuration
@@ -151,23 +147,23 @@ export type TooltipFormatter = (
 
 export interface ChartComponent {
   type: ChartType
-  renderer: ComponentType<Record<string, unknown>>
+  renderer: ComponentType<any>
 }
 
 export type ChartType =
-  | "statCard"
-  | "barChart"
-  | "horizontalBarChart"
-  | "lineChart"
-  | "areaChart"
-  | "donutChart"
-  | "pieChart"
-  | "stackedBarChart"
-  | "composedChart"
-  | "heatmap"
-  | "treemap"
-  | "gauge"
-  | "custom"
+  | 'statCard'
+  | 'barChart'
+  | 'horizontalBarChart'
+  | 'lineChart'
+  | 'areaChart'
+  | 'donutChart'
+  | 'pieChart'
+  | 'stackedBarChart'
+  | 'composedChart'
+  | 'heatmap'
+  | 'treemap'
+  | 'gauge'
+  | 'custom'
 
 // ============================================
 // Layout Configuration
@@ -203,7 +199,7 @@ export interface StatCardData {
   label: string
   trend?: {
     value: number
-    direction: "up" | "down" | "neutral"
+    direction: 'up' | 'down' | 'neutral'
     label?: string
   }
   subValue?: string
@@ -214,14 +210,14 @@ export interface BarChartDataPoint {
   value: number
   label?: string
   color?: string
-  [key: string]: unknown
+  [key: string]: any
 }
 
 export interface TimeSeriesDataPoint {
   date: string
   value: number
   label: string
-  [key: string]: unknown
+  [key: string]: any
 }
 
 export interface DistributionDataPoint {
