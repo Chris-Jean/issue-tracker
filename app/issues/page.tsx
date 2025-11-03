@@ -64,7 +64,7 @@ function Home() {
         ? { ...newIssue, image: imageId }
         : { ...newIssue };
 
-      await createIssue(newIssueWithId);
+        await createIssue(newIssueWithId as Parameters<typeof createIssue>[0]);
       toast({ title: "Success", description: "Issue created successfully" });
       setIsCreateModalOpen(false);
     } catch (error) {
