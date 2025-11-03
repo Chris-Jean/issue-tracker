@@ -1,13 +1,20 @@
-export { extractVolume } from './volume'
-export { extractTopN } from './topN'
-export { extractTimeSeries } from './timeSeries'
-export { extractDistribution } from './distribution'
+import { ConvexIssue } from "@/app/types"
 
-// Placeholder for other extractors
-export function extractComparison(issues: any[], params?: any): any {
+export { extractVolume } from "./volume"
+export { extractTopN } from "./topN"
+export { extractTimeSeries } from "./timeSeries"
+export { extractDistribution } from "./distribution"
+
+export function extractComparison(
+  _issues: ConvexIssue[],
+  _params?: Record<string, unknown>
+): null {
   return null
 }
 
-export function extractAggregation(issues: any[], params?: any): any {
+export function extractAggregation(
+  _issues: ConvexIssue[],
+  _params?: Record<string, unknown>
+): null {
   return null
 }

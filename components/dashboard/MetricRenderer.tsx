@@ -3,18 +3,21 @@
 import { MetricConfig } from "@/lib/dashboard/types/MetricConfig"
 import ChartCard from "./ChartCard"
 
-interface MetricRendererProps {
+interface MetricRendererProps<T = unknown> {
   config: MetricConfig
-  data: any
+  data: T
 }
 
-export default function MetricRenderer({ config, data }: MetricRendererProps) {
+export default function MetricRenderer<T = unknown>({
+  config,
+  data,
+}: MetricRendererProps<T>) {
   if (!data) return null
 
   const Component = config.component.renderer
 
   // For stat cards, render without ChartCard wrapper
-  if (config.component.type === 'statCard') {
+  if (config.component.type === "statCard") {
     return <Component data={data} title={config.title} {...config.componentProps} />
   }
 

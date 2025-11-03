@@ -3,7 +3,7 @@
 import { X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import IssueForm from "./IssueForm"
-import type { Issue, ConvexIssue } from "./types"
+import type { Issue, ConvexIssue as _ConvexIssue } from "./types"
 
 interface IssueFormModalProps {
   isOpen: boolean

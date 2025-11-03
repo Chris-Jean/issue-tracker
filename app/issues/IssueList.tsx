@@ -136,9 +136,9 @@ useEffect(() => {
     });
   });
 
-  // ✅ Only set if it’s not already initialized
   setCollapsedMonths((prev) => (Object.keys(prev).length ? prev : collapsedInit));
-}, [issues]);
+}, [issues, groupedByCategoryAndMonth]);
+
 
   const toggleCategory = (category: string) =>
     setCollapsedCategories((prev) => ({ ...prev, [category]: !prev[category] }));

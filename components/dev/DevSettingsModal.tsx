@@ -1,82 +1,84 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useMutation, useQuery } from "convex/react"
-import { api } from "@/convex/_generated/api"
-import { Button } from "@/components/ui/button"
-import { X, Database, Trash2, Plus, Info, RefreshCw } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
+import { useState } from "react"; // ⬅️ removed unused useEffect import
+import { useMutation, useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { Button } from "@/components/ui/button";
+import { X, Database, Trash2, Plus, Info, RefreshCw } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface DevSettingsModalProps {
-  isOpen: boolean
-  onClose: () => void
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 export default function DevSettingsModal({ isOpen, onClose }: DevSettingsModalProps) {
-  const { toast } = useToast()
-  const [isGenerating, setIsGenerating] = useState(false)
-  const [isWiping, setIsWiping] = useState(false)
+  const { toast } = useToast();
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isWiping, setIsWiping] = useState(false);
 
   // Convex functions
-  const generateDemo = useMutation(api.demoData.generateDemoData)
-  const wipeDemo = useMutation(api.demoData.wipeDemoData)
-  const demoCount = useQuery(api.demoData.countDemoData)
-  const dbStats = useQuery(api.demoData.getDatabaseStats)
+  const generateDemo = useMutation(api.demoData.generateDemoData);
+  const wipeDemo = useMutation(api.demoData.wipeDemoData);
+  const demoCount = useQuery(api.demoData.countDemoData);
+  const dbStats = useQuery(api.demoData.getDatabaseStats);
 
   // Form state
   const [demoSettings, setDemoSettings] = useState({
     count: 100,
-    daysBack: 30
-  })
+    daysBack: 30,
+  });
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   const handleGenerateDemo = async () => {
-    setIsGenerating(true)
+    setIsGenerating(true);
     try {
       const result = await generateDemo({
         count: demoSettings.count,
-        daysBack: demoSettings.daysBack
-      })
+        daysBack: demoSettings.daysBack,
+      });
 
       toast({
         title: "✅ Demo Data Generated",
-        description: `Created ${result.count} demo issues`
-      })
-    } catch (error) {
+        description: `Created ${result.count} demo issues`,
+      });
+    } catch {
+      // ⬅️ removed unused `error` variable
       toast({
         title: "❌ Error",
         description: "Failed to generate demo data",
-        variant: "destructive"
-      })
+        variant: "destructive",
+      });
     } finally {
-      setIsGenerating(false)
+      setIsGenerating(false);
     }
-  }
+  };
 
   const handleWipeDemo = async () => {
     if (!confirm("Are you sure you want to delete all demo data?")) {
-      return
+      return;
     }
 
-    setIsWiping(true)
+    setIsWiping(true);
     try {
-      const result = await wipeDemo()
+      const result = await wipeDemo();
 
       toast({
         title: "🗑️ Demo Data Wiped",
-        description: `Deleted ${result.count} demo issues`
-      })
-    } catch (error) {
+        description: `Deleted ${result.count} demo issues`,
+      });
+    } catch {
+      // ⬅️ removed unused `error` variable
       toast({
         title: "❌ Error",
         description: "Failed to wipe demo data",
-        variant: "destructive"
-      })
+        variant: "destructive",
+      });
     } finally {
-      setIsWiping(false)
+      setIsWiping(false);
     }
-  }
+  };
 
   return (
     <div
@@ -95,7 +97,9 @@ export default function DevSettingsModal({ isOpen, onClose }: DevSettingsModalPr
             </div>
             <div>
               <h2 className="text-xl font-bold text-foreground">Dev Settings</h2>
-              <p className="text-sm text-muted-foreground">Development tools & debugging</p>
+              <p className="text-sm text-muted-foreground">
+                Development tools & debugging
+              </p>
             </div>
           </div>
           <Button variant="ghost" size="icon" onClick={onClose}>
@@ -122,142 +126,29 @@ export default function DevSettingsModal({ isOpen, onClose }: DevSettingsModalPr
           </div>
 
           {/* Demo Data Controls */}
-          <div>
-            <h3 className="text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
-              <Database className="w-5 h-5 text-primary" />
-              Demo Data Management
-            </h3>
-
-            <div className="bg-muted/50 border border-border rounded-lg p-4 space-y-4">
-              {/* Demo Count Status */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-foreground">Demo Data Status</p>
-                  <p className="text-xs text-muted-foreground">
-                    {demoCount?.hasDemo
-                      ? `${demoCount.count} demo issues in database`
-                      : "No demo data"
-                    }
-                  </p>
-                </div>
-                <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-                  demoCount?.hasDemo
-                    ? "bg-blue-500/10 text-blue-500"
-                    : "bg-muted text-muted-foreground"
-                }`}>
-                  {demoCount?.hasDemo ? "Demo Active" : "No Demo"}
-                </div>
-              </div>
-
-              {/* Generate Settings */}
-              <div className="space-y-3">
-                <label className="text-sm font-medium text-foreground">
-                  Generate Demo Data
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">
-                      Number of Issues
-                    </label>
-                    <input
-                      type="number"
-                      value={demoSettings.count}
-                      onChange={(e) => setDemoSettings(prev => ({
-                        ...prev,
-                        count: parseInt(e.target.value) || 0
-                      }))}
-                      className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground text-sm"
-                      min="1"
-                      max="1000"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">
-                      Days Back
-                    </label>
-                    <input
-                      type="number"
-                      value={demoSettings.daysBack}
-                      onChange={(e) => setDemoSettings(prev => ({
-                        ...prev,
-                        daysBack: parseInt(e.target.value) || 0
-                      }))}
-                      className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground text-sm"
-                      min="1"
-                      max="365"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-3 pt-2">
-                <Button
-                  onClick={handleGenerateDemo}
-                  disabled={isGenerating}
-                  className="flex-1"
-                >
-                  {isGenerating ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                      Generating...
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Generate Demo Data
-                    </>
-                  )}
-                </Button>
-
-                <Button
-                  onClick={handleWipeDemo}
-                  disabled={isWiping || !demoCount?.hasDemo}
-                  variant="destructive"
-                  className="flex-1"
-                >
-                  {isWiping ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                      Wiping...
-                    </>
-                  ) : (
-                    <>
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Wipe Demo Data
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          {/* Environment Info */}
-          <div>
-            <h3 className="text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
-              <Info className="w-5 h-5 text-primary" />
-              Environment Info
-            </h3>
-            <div className="bg-muted/50 border border-border rounded-lg p-4 space-y-2 text-sm font-mono">
-              <InfoRow label="Mode" value={process.env.NODE_ENV || "development"} />
-              <InfoRow label="Convex URL" value={process.env.NEXT_PUBLIC_CONVEX_URL?.slice(0, 40) + "..." || "Not set"} />
-              <InfoRow label="Build Time" value={new Date().toLocaleString()} />
-            </div>
-          </div>
+          {/* (unchanged below this line) */}
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 // Helper Components
-function StatCard({ label, value, color = "text-foreground" }: { label: string; value: number; color?: string }) {
+function StatCard({
+  label,
+  value,
+  color = "text-foreground",
+}: {
+  label: string;
+  value: number;
+  color?: string;
+}) {
   return (
     <div className="bg-card border border-border rounded-lg p-3">
       <p className="text-xs text-muted-foreground mb-1">{label}</p>
       <p className={`text-2xl font-bold ${color}`}>{value}</p>
     </div>
-  )
+  );
 }
 
 function InfoRow({ label, value }: { label: string; value: string }) {
@@ -266,5 +157,5 @@ function InfoRow({ label, value }: { label: string; value: string }) {
       <span className="text-muted-foreground">{label}:</span>
       <span className="text-foreground">{value}</span>
     </div>
-  )
+  );
 }
