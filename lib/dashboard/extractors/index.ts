@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { ConvexIssue } from "@/app/types"
 
 export { extractVolume } from "./volume"
@@ -18,3 +19,4 @@ export function extractAggregation(
 ): null {
   return null
 }
+/* eslint-enable @typescript-eslint/no-unused-vars */
