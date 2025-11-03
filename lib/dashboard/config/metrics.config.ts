@@ -396,46 +396,53 @@ export const metricsConfig: MetricConfig[] = [
   },
 
   // ============================================
-  // METRIC 10: Reason Distribution
-  // ============================================
-  {
-    id: 'reason-distribution',
-    title: 'Common Issues',
-    description: 'Distribution of issues by reason',
-    category: 'distribution',
+// METRIC 10: Reason Distribution (Top 20)
+// ============================================
+{
+  id: 'reason-distribution',
+  title: 'Common Issues (Top 20)',
+  description: 'Top 20 most frequent issue reasons',
+  category: 'distribution',
 
-    dataSource: {
-      type: 'distribution',
-      params: {
-        field: 'reason'
-      }
-    },
-
-    labelFormatters: {
-      yAxis: (value) => value,
-      xAxis: (value) => value.toString(),
-      tooltip: (value, name, props) => {
-        return [
-          `${value} issues`,
-          `${props.payload.percentage.toFixed(1)}% of total`
-        ]
-      }
-    },
-
-    component: {
-      type: 'horizontalBarChart',
-      renderer: HorizontalBarChart
-    },
-
-    componentProps: {
-      height: 300,
-      dataKey: 'value',
-      nameKey: 'name',
-      color: 'hsl(var(--chart-4))'
-    },
-
-    layout: {
-      order: 10
+  dataSource: {
+    type: 'distribution',
+    params: {
+      field: 'reason'
     }
   },
+
+  transforms: [
+    // ✅ Sort highest first
+    { type: 'sortByCount', params: { order: 'desc' } },
+    // ✅ Limit to top 20
+    { type: 'top', params: { n: 20, by: 'value' } }
+  ],
+
+  labelFormatters: {
+    yAxis: (value) => value,
+    xAxis: (value) => value.toString(),
+    tooltip: (value, name, props) => {
+      return [
+        `${value} issues`,
+        `${props.payload.percentage.toFixed(1)}% of total`
+      ]
+    }
+  },
+
+  component: {
+    type: 'horizontalBarChart',
+    renderer: HorizontalBarChart
+  },
+
+  componentProps: {
+    height: 500, // ✅ increase slightly for readability
+    dataKey: 'value',
+    nameKey: 'name',
+    color: 'hsl(var(--chart-4))'
+  },
+
+  layout: {
+    order: 10
+  }
+}
 ]
