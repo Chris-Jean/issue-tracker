@@ -395,13 +395,13 @@ export const metricsConfig: MetricConfig[] = [
     }
   },
 
-  // ============================================
-// METRIC 10: Reason Distribution (Top 20)
+// ============================================
+// METRIC 10: Common Issues (≥5 occurrences)
 // ============================================
 {
   id: 'reason-distribution',
-  title: 'Common Issues (Top 20)',
-  description: 'Top 20 most frequent issue reasons',
+  title: 'Common Issues',
+  description: 'Only shows issues that appear at least 5 times',
   category: 'distribution',
 
   dataSource: {
@@ -412,10 +412,14 @@ export const metricsConfig: MetricConfig[] = [
   },
 
   transforms: [
-    // ✅ Sort highest first
+    // Sort highest first
     { type: 'sortByCount', params: { order: 'desc' } },
-    // ✅ Limit to top 20
-    { type: 'top', params: { n: 20, by: 'value' } }
+
+    // ✅ Keep only issues with 5+ occurrences
+    {
+      type: 'filter',
+      fn: (data) => data.filter((item: any) => item.value >= 5)
+    }
   ],
 
   labelFormatters: {
@@ -435,7 +439,7 @@ export const metricsConfig: MetricConfig[] = [
   },
 
   componentProps: {
-    height: 500, // ✅ increase slightly for readability
+    height: 400,
     dataKey: 'value',
     nameKey: 'name',
     color: 'hsl(var(--chart-4))'
