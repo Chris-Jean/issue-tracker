@@ -200,27 +200,36 @@ useEffect(() => {
         <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
 
         <Button
-          variant="outline"
-          onClick={() => {
-            if (!filteredIssues.length) return alert("No tickets to export.");
-            const exportData = filteredIssues.map((i) => ({
-              "Caller ID": i.title,
-              "Service #": i.agent,
-              "Client": i.userType,
-              "Project Name": i.internetSource,
-              "Category": i.category,
-              "Reason": i.reason || "N/A",
-              "Date": new Date(i.dateOfIncident).toLocaleDateString(),
-              "Time": new Date(i.dateOfIncident).toLocaleTimeString(),
-              "Language": i.language,
-              "Description": i.description,
-            }));
-            exportToJsonExcel(exportData, "Active_Tickets");
-          }}
-          className="flex items-center gap-2"
-        >
-          <Download className="h-4 w-4" /> Export Excel
-        </Button>
+  variant="outline"
+  onClick={() => {
+    if (!filteredIssues.length) return alert("No tickets to export.");
+
+    // ✅ Sort oldest → newest
+    const sorted = [...filteredIssues].sort(
+      (a, b) =>
+        new Date(a.dateOfIncident).getTime() -
+        new Date(b.dateOfIncident).getTime()
+    );
+
+    const exportData = sorted.map((i) => ({
+      "Caller ID": i.title,
+      "Service #": i.agent,
+      "Client": i.userType,
+      "Project Name": i.internetSource,
+      "Category": i.category,
+      "Reason": i.reason || "N/A",
+      "Date": new Date(i.dateOfIncident).toLocaleDateString(),
+      "Time": new Date(i.dateOfIncident).toLocaleTimeString(),
+      "Language": i.language,
+      "Description": i.description,
+    }));
+
+    exportToJsonExcel(exportData, "Active_Tickets");
+  }}
+  className="flex items-center gap-2"
+>
+  <Download className="h-4 w-4" /> Export Excel
+</Button>
 
         <Button variant="destructive" onClick={handleDeleteAll}>
           🗑️ Delete All
