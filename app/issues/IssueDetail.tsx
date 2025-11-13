@@ -84,10 +84,14 @@ export default function IssueDetail({ issue, onClose, onUpdate }: IssueDetailPro
         onChange={handleChange}
         placeholder="Description"
       />
-      <Input
+       <Input
         type="datetime-local"
         name="dateOfIncident"
-        value={editedIssue.dateOfIncident?.split(".")[0] ?? ""}
+        value={
+          editedIssue.dateOfIncident
+            ? new Date(editedIssue.dateOfIncident).toISOString().slice(0, 16)
+            : ""
+        }
         onChange={handleChange}
       />
       <div className="flex justify-end space-x-2">
